@@ -23,7 +23,7 @@ use_cookies() {
 
 report() {
   print -r -- "$1" >"${job%.json}.result"
-  open -g "tinycast://extensions/allmight97/yt-music-capture/show-capture-results"
+  open -g "$done_link"
 }
 
 probe() {
@@ -36,7 +36,7 @@ run() {
   url=$(field url) artist=$(field artist) title=$(field title) album=$(field album)
   year=$(field year) comment=$(field comment) description=$(field description)
   destination=$(field destination) share=$(field share) volume=$(field volume)
-  add_to_music=$(field addToMusic)
+  add_to_music=$(field addToMusic) done_link=$(field doneLink)
   use_cookies "$(field cookies)"
 
   if [[ -n $share && $destination == $volume/* ]]; then

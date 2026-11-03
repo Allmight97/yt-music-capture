@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { useEffect, useState } from "react";
 import { Layout, LAYOUTS, mountPoint, songPath } from "./destination";
 import { SongTags, suggestTags, VideoInfo } from "./tags";
-import { probe, startCapture } from "./worker";
+import { doneLink, probe, startCapture } from "./worker";
 
 type Preferences = {
   nasShareUrl: string;
@@ -108,6 +108,7 @@ export default function Command() {
         volume,
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
+        doneLink: doneLink(),
       });
       await LocalStorage.setItem(
         rememberKey(info),
@@ -147,17 +148,23 @@ export default function Command() {
         )
       }
     >
-      <Form.TextField id="url" title="YouTube URL" placeholder="https://www.youtube.com/watch?v=…" value={url} onChange={setUrl} />
+      <Form.TextField
+        id="url"
+        title="YouTube URL"
+        placeholder="https://www.youtube.com/watch?v=…"
+        value={url}
+        onChange={setUrl}
+      />
       {error && <Form.Description title="Error" text={error} />}
       {info && (
         <>
           <Form.Description title="Video" text={`${info.title}\n${info.channel}`} />
           <Form.Separator />
-          <Form.TextField id="artist" title="Artist" {...field("artist")} />
-          <Form.TextField id="title" title="Title" {...field("title")} />
-          <Form.TextField id="album" title="Album" {...field("album")} />
-          <Form.TextField id="year" title="Year" {...field("year")} />
-          <Form.TextArea id="comment" title="Comment" {...field("comment")} />
+          <Form.TextField id="artist" title="Artist" placeholder="Artist name" {...field("artist")} />
+          <Form.TextField id="title" title="Title" placeholder="Song title" {...field("title")} />
+          <Form.TextField id="album" title="Album" placeholder="Album name" {...field("album")} />
+          <Form.TextField id="year" title="Year" placeholder="YYYY" {...field("year")} />
+          <Form.TextArea id="comment" title="Comment" placeholder="Notes saved in the file" {...field("comment")} />
           <Form.Separator />
           <Form.Dropdown
             id="layout"
