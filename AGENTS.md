@@ -64,6 +64,10 @@ capture finishes even after the TinyCast window closes.
 
 ## Install and checks
 
+Run scripts with Bun or npm (`bun run build` and `npm run build` are equivalent). Add or update
+dependencies only with npm: the Raycast Store builds with npm and requires `package-lock.json`, so
+it is the only lockfile. `.gitignore` drops `bun.lock`.
+
 `npm run lint` (`ray lint`: manifest, icon, ESLint, Prettier), `npm run build` (writes `build/`) and
 `npm test` must pass. Keep `-o build` in the build script: without it `ray build` writes into
 `~/.config/raycast/extensions/`. TinyCast's Install from GitHub ignores the script and runs
