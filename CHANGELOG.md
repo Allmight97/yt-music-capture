@@ -1,5 +1,13 @@
 # Music Video Capture Changelog
 
+## [0.1.1] - 2026-11-03
+
+### Changed
+
+- YouTube is asked only what a capture needs: a lookup is three requests, the form waits for typing
+  to stop, stops lookups it no longer needs, and never looks up the same video twice.
+- The cover is made from the thumbnail as YouTube serves it, one lossy step fewer.
+
 ## [0.1.0] - 2026-11-03
 
 First tagged release. Built for TinyCast; Raycast Store submission is tracked in
