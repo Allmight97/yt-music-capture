@@ -35,7 +35,7 @@ probe() {
   mkdir -p "$cache"
   find "$cache" -name 'probe-*.info.json' -mmin +360 -delete
   ytdlp --skip-download --no-simulate --write-info-json -o "$cache/probe-%(id)s" \
-    -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description})j' -- "$1"
+    -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description,chapters})j' -- "$1"
 }
 
 run() {

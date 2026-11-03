@@ -6,7 +6,7 @@ import manifest from "../package.json";
 import { LAYOUTS, networkShares, songPath, volumeOf } from "../src/destination";
 import { SongTags } from "../src/tags";
 
-const tags: SongTags = { artist: "AC/DC", albumArtist: "", title: "Thunderstruck", album: "YouTube", year: "1990", comment: "" };
+const tags: SongTags = { artist: "AC/DC", albumArtist: "", title: "Thunderstruck", album: "YouTube", year: "1990", comment: "", art: "", tracklist: "" };
 const places = { library: "/Volumes/DATA/media/Music", captureFolder: "!YT Captures" };
 
 test("each layout places the song where its label says", () => {

@@ -8,8 +8,9 @@ Raycast itself yet.
 - **No quality loss.** YouTube's best audio stream (AAC) is copied as-is, not re-encoded.
 - **Cover art.** The video thumbnail, centred on a blurred square so nothing is cropped.
 - **Tags you can edit first.** Artist and title are guessed from the video title ("Artist - Title
-  (Official Video)" works); album artist, year, a comment naming the uploading channel and source
-  URL, the video description, and a `SOURCE_URL` tag.
+  (Official Video)" works); album artist, year, the video description, and a `SOURCE_URL` tag.
+- **Credits in the comment.** The channel and a short link, the artwork credit when the
+  description gives one, and a mix's tracklist when the uploader added chapters.
 - **A smart album.** YouTube's own album when it knows one; "2020 Mixes" for a long mix uploaded in
   2020 (the template is a setting); none for a single.
 - **A Grouping tag** ("YouTube Capture" by default) so one Apple Music smart playlist collects every

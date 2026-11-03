@@ -1,6 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { channelArtist, cleanTitle, safeFileName, suggestAlbum, suggestTags, videoIdOf, VideoInfo } from "../src/tags";
+import {
+  artCreditOf,
+  fileComment,
+  channelArtist,
+  cleanTitle,
+  safeFileName,
+  suggestAlbum,
+  suggestTags,
+  timestamp,
+  videoIdOf,
+  VideoInfo,
+} from "../src/tags";
 
 const base: VideoInfo = {
   id: "x",
@@ -11,13 +22,13 @@ const base: VideoInfo = {
   webpageUrl: "https://www.youtube.com/watch?v=x",
   description: "",
   durationSeconds: 213,
+  chapters: [],
 };
 
 test("splits 'Artist - Title' and drops video noise", () => {
   const tags = suggestTags(
     { ...base, title: "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)" },
     "{year} Mixes",
-    "2026-11-02",
   );
   assert.equal(tags.artist, "Rick Astley");
   assert.equal(tags.title, "Never Gonna Give You Up");
@@ -31,22 +42,55 @@ test("keeps meaningful brackets such as features and remixes", () => {
 });
 
 test("falls back to the channel as artist when the title has no separator", () => {
-  const tags = suggestTags({ ...base, title: "Midnight Drive [Lyric Video]", channel: "Neon Wolf - Topic" }, "{year} Mixes", "2026-11-02");
+  const tags = suggestTags({ ...base, title: "Midnight Drive [Lyric Video]", channel: "Neon Wolf - Topic" }, "{year} Mixes");
   assert.equal(tags.artist, "Neon Wolf");
   assert.equal(tags.title, "Midnight Drive");
 });
 
 test("prefers YouTube Music's own artist and track fields", () => {
-  const tags = suggestTags({ ...base, title: "whatever", artist: "Real Artist", track: "Real Track" }, "{year} Mixes", "2026-11-02");
+  const tags = suggestTags({ ...base, title: "whatever", artist: "Real Artist", track: "Real Track" }, "{year} Mixes");
   assert.deepEqual([tags.artist, tags.title], ["Real Artist", "Real Track"]);
 });
 
-test("comment names the uploading channel, upload date, source and capture date", () => {
-  const tags = suggestTags({ ...base, title: "A - B" }, "{year} Mixes", "2026-11-02");
+test("comment is the channel and a short link to the video", () => {
+  assert.equal(suggestTags({ ...base, id: "ke2om19aOBw" }, "{year} Mixes").comment, "Some Channel · youtu.be/ke2om19aOBw");
+});
+
+test("tracklist comes from the uploader's chapters, and is blank without them", () => {
+  const chapters = [
+    { startSeconds: 0, title: "Andy Leech - Vanadis" },
+    { startSeconds: 197, title: "Sublab - anything for you" },
+    { startSeconds: 3480, title: "Fabbro - Pandemic" },
+    { startSeconds: 3600, title: "Lera - Корабли (Antent Edit)" },
+  ];
   assert.equal(
-    tags.comment,
-    "YouTube: Some Channel (https://www.youtube.com/channel/abc) · Uploaded 2009-10-25 · Source https://www.youtube.com/watch?v=x · Captured 2026-11-02",
+    suggestTags({ ...base, chapters }, "{year} Mixes").tracklist,
+    "0:00 Andy Leech - Vanadis\n3:17 Sublab - anything for you\n58:00 Fabbro - Pandemic\n1:00:00 Lera - Корабли (Antent Edit)",
   );
+  assert.equal(suggestTags(base, "{year} Mixes").tracklist, "");
+});
+
+test("timestamps drop the hour until a mix passes one", () => {
+  assert.deepEqual([timestamp(0), timestamp(59.9), timestamp(3599), timestamp(3725)], ["0:00", "0:59", "59:59", "1:02:05"]);
+});
+
+test("art credit takes the named artist and the link on the next line", () => {
+  assert.equal(
+    artCreditOf("🦌 Tracklist:\n00:00 A - B\n\n🦌  Artwork by Gracile\nhttps://www.pixiv.net/en/users/3434849\n\nContact: x@y.z"),
+    "Gracile · pixiv.net/en/users/3434849",
+  );
+  assert.equal(artCreditOf("Art by: Someone\nThanks for listening"), "Someone");
+  assert.equal(artCreditOf("Cover art by Kira"), "Kira");
+  assert.equal(artCreditOf("Support the artist by streaming"), "");
+  assert.equal(artCreditOf(""), "");
+});
+
+test("the file's comment is the source line, the art credit, then the tracklist", () => {
+  const tags = { ...suggestTags(base, "{year} Mixes"), comment: "Ch · youtu.be/x" };
+  assert.equal(fileComment(tags), "Ch · youtu.be/x");
+  assert.equal(fileComment({ ...tags, art: " Gracile " }), "Ch · youtu.be/x\nArt: Gracile");
+  assert.equal(fileComment({ ...tags, tracklist: "0:00 A - B" }), "Ch · youtu.be/x\n\n0:00 A - B");
+  assert.equal(fileComment({ ...tags, comment: "", art: "", tracklist: "" }), "");
 });
 
 test("strips VEVO and Official from channel names", () => {

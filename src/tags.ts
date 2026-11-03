@@ -7,10 +7,13 @@ export type VideoInfo = {
   webpageUrl: string;
   description: string;
   durationSeconds: number;
+  chapters: Chapter[];
   artist?: string;
   track?: string;
   album?: string;
 };
+
+export type Chapter = { startSeconds: number; title: string };
 
 export type SongTags = {
   artist: string;
@@ -19,6 +22,8 @@ export type SongTags = {
   album: string;
   year: string;
   comment: string;
+  art: string;
+  tracklist: string;
 };
 
 const NOISE =
@@ -40,19 +45,36 @@ export function channelArtist(channel: string): string {
     .trim();
 }
 
-export function formatUploadDate(yyyymmdd: string): string {
-  return /^\d{8}$/.test(yyyymmdd)
-    ? `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
-    : yyyymmdd;
+export function shortLink(id: string): string {
+  return `youtu.be/${id}`;
 }
 
-export function sourceComment(info: VideoInfo, capturedOn: string): string {
-  return [
-    `YouTube: ${info.channel} (${info.channelUrl})`,
-    `Uploaded ${formatUploadDate(info.uploadDate)}`,
-    `Source ${info.webpageUrl}`,
-    `Captured ${capturedOn}`,
-  ].join(" · ");
+export function timestamp(seconds: number): string {
+  const s = Math.floor(seconds);
+  const [h, m, sec] = [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+export function tracklistOf(chapters: Chapter[]): string {
+  return chapters.map((chapter) => `${timestamp(chapter.startSeconds)} ${chapter.title}`).join("\n");
+}
+
+const ART_CREDIT = /^\W*(?:art(?:work)?|illustration|cover(?: art)?|drawing|picture|image)\s+by\s*:?\s*(.+?)\s*$/i;
+
+export function artCreditOf(description: string): string {
+  const lines = description.split("\n").map((line) => line.trim());
+  const at = lines.findIndex((line) => ART_CREDIT.test(line));
+  if (at < 0) return "";
+  const name = lines[at].match(ART_CREDIT)![1];
+  const link = lines[at + 1]?.match(/^https?:\/\/(?:www\.)?(\S+)$/)?.[1];
+  return link ? `${name} · ${link}` : name;
+}
+
+export function fileComment(tags: SongTags): string {
+  const art = tags.art.trim();
+  const head = [tags.comment.trim(), art && `Art: ${art}`].filter(Boolean).join("\n");
+  return [head, tags.tracklist.trim()].filter(Boolean).join("\n\n");
 }
 
 export const MIX_MINUTES = 20;
@@ -63,26 +85,22 @@ export function suggestAlbum(info: VideoInfo, mixAlbum: string): string {
   return "";
 }
 
-export function suggestTags(info: VideoInfo, mixAlbum: string, capturedOn: string): SongTags {
-  const year = info.uploadDate.slice(0, 4);
-  const album = suggestAlbum(info, mixAlbum);
-  const comment = sourceComment(info, capturedOn);
-  if (info.artist && info.track) {
-    return { artist: info.artist, albumArtist: "", title: info.track, album, year, comment };
-  }
+export function suggestTags(info: VideoInfo, mixAlbum: string): SongTags {
+  const shared = {
+    albumArtist: "",
+    album: suggestAlbum(info, mixAlbum),
+    year: info.uploadDate.slice(0, 4),
+    comment: `${info.channel} · ${shortLink(info.id)}`,
+    art: artCreditOf(info.description),
+    tracklist: tracklistOf(info.chapters),
+  };
+  if (info.artist && info.track) return { ...shared, artist: info.artist, title: info.track };
   const cleaned = cleanTitle(info.title);
   const parts = cleaned.split(SEPARATOR);
   if (parts.length >= 2) {
-    return {
-      artist: parts[0].trim(),
-      albumArtist: "",
-      title: parts.slice(1).join(" - ").trim(),
-      album,
-      year,
-      comment,
-    };
+    return { ...shared, artist: parts[0].trim(), title: parts.slice(1).join(" - ").trim() };
   }
-  return { artist: channelArtist(info.channel), albumArtist: "", title: cleaned, album, year, comment };
+  return { ...shared, artist: channelArtist(info.channel), title: cleaned };
 }
 
 export function safeFileName(name: string): string {

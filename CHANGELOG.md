@@ -1,5 +1,17 @@
 # Music Video Capture Changelog
 
+## [Unreleased]
+
+### Changed
+
+- The comment credits the source concisely: channel and `youtu.be` link, the artwork credit, and a
+  mix's tracklist from the video's chapters. Upload and capture dates are gone; Year and Date Added
+  already hold them.
+
+### Added
+
+- Art and Tracklist fields in the form, filled from the video and editable before capture.
+
 ## [0.1.1] - 2026-11-03
 
 ### Changed

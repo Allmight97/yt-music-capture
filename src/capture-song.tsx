@@ -14,7 +14,7 @@ import {
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { Layout, LAYOUTS, networkShares, songPath, volumeOf } from "./destination";
-import { albumArtistOf, SongTags, suggestTags, videoIdOf, VideoInfo, watchUrl } from "./tags";
+import { albumArtistOf, fileComment, SongTags, suggestTags, videoIdOf, VideoInfo, watchUrl } from "./tags";
 import { doneLink, mountTable, probe, startCapture } from "./worker";
 
 type Preferences = {
@@ -47,10 +47,6 @@ async function learnShares(): Promise<Record<string, string>> {
   return shares;
 }
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 async function initialUrl(): Promise<string> {
   const selected = await getSelectedText().catch(() => "");
   if (videoIdOf(selected)) return selected.trim();
@@ -69,6 +65,8 @@ export default function Command() {
     album: "",
     year: "",
     comment: "",
+    art: "",
+    tracklist: "",
   });
   const [layout, setLayout] = useState<Layout>(preferences.layout);
   const [customFolder, setCustomFolder] = useState<string[]>([]);
@@ -97,7 +95,7 @@ export default function Command() {
           const remembered = await recall(found);
           if (cancelled) return;
           setInfo(found);
-          setTags(suggestTags(found, preferences.mixAlbum, today()));
+          setTags(suggestTags(found, preferences.mixAlbum));
           setLayout(remembered?.layout ?? preferences.layout);
           setCustomFolder(remembered?.customFolder ? [remembered.customFolder] : []);
           setIsRemembered(Boolean(remembered));
@@ -123,6 +121,7 @@ export default function Command() {
       });
       await startCapture({
         ...tags,
+        comment: fileComment(tags),
         url: info.webpageUrl,
         description: info.description,
         albumArtist: albumArtistOf(tags),
@@ -197,6 +196,13 @@ export default function Command() {
           <Form.TextField id="album" title="Album" placeholder="Album name" {...field("album")} />
           <Form.TextField id="year" title="Year" placeholder="YYYY" {...field("year")} />
           <Form.TextArea id="comment" title="Comment" placeholder="Notes saved in the file" {...field("comment")} />
+          <Form.TextField id="art" title="Art" placeholder="Artwork credit" {...field("art")} />
+          <Form.TextArea
+            id="tracklist"
+            title="Tracklist"
+            placeholder="From the video's chapters"
+            {...field("tracklist")}
+          />
           <Form.Separator />
           <Form.Dropdown
             id="layout"

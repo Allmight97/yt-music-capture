@@ -58,6 +58,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
 - ffmpeg writes the tags, including Grouping (`©grp`) and the description (`desc`, `ldes`);
   AtomicParsley adds `----:com.apple.iTunes:SOURCE_URL`. Never use yt-dlp `--parse-metadata`: it
   splits on `:` and breaks URLs.
+- Comment (`fileComment`): channel and `youtu.be` link, the art credit, then the tracklist from
+  yt-dlp's `chapters`. It credits the uploader and the artists in a mix. Never derive a tracklist
+  from description text: no chapters means no tracklist (owner's choice).
 - Album, in order (`suggestAlbum`): YouTube's own, else the Mix Album template for videos of
   `MIX_MINUTES` or more (`{year}` = upload year), else blank. The owner files long mixes as
   "YYYY Mixes" and singles with no album.

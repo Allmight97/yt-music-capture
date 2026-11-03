@@ -49,6 +49,10 @@ export function probe(url: string, cookies: string): { result: Promise<VideoInfo
           webpageUrl: json.webpage_url ?? url,
           description: json.description ?? "",
           durationSeconds: json.duration ?? 0,
+          chapters: (json.chapters ?? []).map((chapter: { start_time: number; title: string }) => ({
+            startSeconds: chapter.start_time,
+            title: chapter.title,
+          })),
           artist: json.artist ?? undefined,
           track: json.track ?? undefined,
           album: json.album ?? undefined,
