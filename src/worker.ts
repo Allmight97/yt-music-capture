@@ -13,6 +13,7 @@ export type Job = SongTags & {
   volume: string;
   addToMusic: boolean;
   cookies: string;
+  grouping: string;
   doneLink: string;
 };
 
@@ -45,8 +46,10 @@ export function probe(url: string, cookies: string): Promise<VideoInfo> {
           uploadDate: json.upload_date ?? "",
           webpageUrl: json.webpage_url ?? url,
           description: json.description ?? "",
+          durationSeconds: json.duration ?? 0,
           artist: json.artist ?? undefined,
           track: json.track ?? undefined,
+          album: json.album ?? undefined,
         });
       },
     );

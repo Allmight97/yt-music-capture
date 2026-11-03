@@ -28,13 +28,13 @@ report() {
 
 probe() {
   use_cookies "${2:-}"
-  ytdlp -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,description})j' "$1"
+  ytdlp -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description})j' "$1"
 }
 
 run() {
   field() { plutil -extract "$1" raw -o - "$job" 2>/dev/null || true; }
   url=$(field url) artist=$(field artist) album_artist=$(field albumArtist) title=$(field title) album=$(field album)
-  year=$(field year) comment=$(field comment) description=$(field description)
+  year=$(field year) comment=$(field comment) description=$(field description) grouping=$(field grouping)
   destination=$(field destination) share=$(field share) volume=$(field volume)
   add_to_music=$(field addToMusic) done_link=$(field doneLink)
   use_cookies "$(field cookies)"
@@ -56,7 +56,7 @@ run() {
   ffmpeg -v error -y -i "$work/source.m4a" -i "$work/cover.jpg" \
     -map 0:a -map 1:v -c copy -disposition:v:0 attached_pic -map_metadata -1 \
     -metadata "title=$title" -metadata "artist=$artist" -metadata "album_artist=$album_artist" \
-    -metadata "album=$album" -metadata "date=$year" -metadata "comment=$comment" \
+    -metadata "album=$album" -metadata "grouping=$grouping" -metadata "date=$year" -metadata "comment=$comment" \
     -metadata "description=$description" -metadata "synopsis=$description" \
     "$work/song.m4a"
   AtomicParsley "$work/song.m4a" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes --overWrite >/dev/null

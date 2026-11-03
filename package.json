@@ -77,13 +77,22 @@
       ]
     },
     {
-      "name": "defaultAlbum",
-      "title": "Default Album",
-      "description": "Album prefilled in the form.",
+      "name": "mixAlbum",
+      "title": "Mix Album",
+      "description": "Album for videos of 20 minutes or more, when YouTube does not know the real album. {year} becomes the upload year. Shorter videos get no album.",
       "type": "textfield",
-      "default": "YouTube",
-      "required": true,
-      "placeholder": "YouTube"
+      "default": "{year} Mixes",
+      "placeholder": "{year} Mixes",
+      "required": false
+    },
+    {
+      "name": "grouping",
+      "title": "Grouping",
+      "description": "Written to every capture's Grouping tag, for an Apple Music smart playlist. Leave blank for none.",
+      "type": "textfield",
+      "default": "YouTube Capture",
+      "placeholder": "YouTube Capture",
+      "required": false
     },
     {
       "name": "addToMusic",

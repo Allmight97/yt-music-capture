@@ -6,8 +6,10 @@ export type VideoInfo = {
   uploadDate: string;
   webpageUrl: string;
   description: string;
+  durationSeconds: number;
   artist?: string;
   track?: string;
+  album?: string;
 };
 
 export type SongTags = {
@@ -53,8 +55,17 @@ export function sourceComment(info: VideoInfo, capturedOn: string): string {
   ].join(" · ");
 }
 
-export function suggestTags(info: VideoInfo, album: string, capturedOn: string): SongTags {
+export const MIX_MINUTES = 20;
+
+export function suggestAlbum(info: VideoInfo, mixAlbum: string): string {
+  if (info.album) return info.album;
+  if (info.durationSeconds >= MIX_MINUTES * 60) return mixAlbum.replaceAll("{year}", info.uploadDate.slice(0, 4));
+  return "";
+}
+
+export function suggestTags(info: VideoInfo, mixAlbum: string, capturedOn: string): SongTags {
   const year = info.uploadDate.slice(0, 4);
+  const album = suggestAlbum(info, mixAlbum);
   const comment = sourceComment(info, capturedOn);
   if (info.artist && info.track) {
     return { artist: info.artist, albumArtist: "", title: info.track, album, year, comment };

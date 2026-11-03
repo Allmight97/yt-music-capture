@@ -21,7 +21,8 @@ type Preferences = {
   musicLibrary: string;
   captureFolder: string;
   layout: Layout;
-  defaultAlbum: string;
+  mixAlbum: string;
+  grouping: string;
   addToMusic: boolean;
   cookiesFromBrowser: string;
 };
@@ -91,7 +92,7 @@ export default function Command() {
         const remembered = await recall(found);
         if (cancelled) return;
         setInfo(found);
-        setTags(suggestTags(found, preferences.defaultAlbum, today()));
+        setTags(suggestTags(found, preferences.mixAlbum, today()));
         setLayout(remembered?.layout ?? preferences.layout);
         setCustomFolder(remembered?.customFolder ? [remembered.customFolder] : []);
         setIsRemembered(Boolean(remembered));
@@ -121,6 +122,7 @@ export default function Command() {
         volume: volumeOf(destination),
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
+        grouping: preferences.grouping.trim(),
         doneLink: doneLink(),
       });
       await LocalStorage.setItem(

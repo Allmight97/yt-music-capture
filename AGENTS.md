@@ -43,9 +43,14 @@ capture finishes even after the TinyCast window closes.
   transcode is yt-dlp's fallback when a video has no AAC stream. Do not add another.
 - **Cover is a 1400×1400 blurred fill.** The full 16:9 thumbnail sits centered on a blurred copy of
   itself. Owner chose this over square crop, which cuts off on-thumbnail text.
-- **Tags**: ffmpeg writes title, artist, album artist (blank in the form means the artist), album, year, comment, and the video description (`desc`,
-  `ldes`). AtomicParsley adds the source URL as `----:com.apple.iTunes:SOURCE_URL`, which survives
+- **Tags**: ffmpeg writes title, artist, album artist (blank in the form means the artist), album,
+  year, comment, Grouping (`©grp`, from the Grouping setting, for an Apple Music smart playlist;
+  blank writes none) and the video description (`desc`, `ldes`). AtomicParsley adds the source URL as `----:com.apple.iTunes:SOURCE_URL`, which survives
   edits to the comment. Do not use yt-dlp `--parse-metadata`; it splits on `:` and broke URLs.
+- **The album suggests itself in layers** (`suggestAlbum` in `src/tags.ts`): YouTube's own album
+  (YouTube Music and "- Topic" uploads), else the Mix Album template for videos of `MIX_MINUTES`
+  (20) or more, with `{year}` as the upload year, else blank, which writes no album tag. The owner
+  files long mixes as "YYYY Mixes" and singles with no album.
 - **Settings name one folder, the Music Library.** Capture folders sit inside it. There is no share
   URL setting: each time the form opens it reads `/sbin/mount` and remembers every mounted SMB/AFP
   share by volume (`LocalStorage` `shares`), and a job carries the share for its destination's
