@@ -1,4 +1,4 @@
-# YT Music Capture
+# Music Video Capture
 
 A Raycast-format extension run inside TinyCast. The form collects a YouTube URL, tags, and a save
 location. A detached worker then makes a tagged `.m4a` with square cover art and saves it, so the
@@ -14,6 +14,10 @@ capture finishes even after the TinyCast window closes.
   TinyCast.
 
 ## Decisions
+
+- **The title is "Music Video Capture"; the `name` stays `yt-music-capture`.** "YT Music" read as
+  YouTube Music. TinyCast and Raycast key saved settings and `LocalStorage` (per-channel
+  destinations, learned shares) by `name`, so renaming it would wipe them.
 
 - **The capture runs outside TinyCast.** TinyCast stops a command's JavaScript when its window
   closes. `startCapture` launches the worker through `perl` with `fork` + `setsid`, so it is in its

@@ -1,4 +1,4 @@
-# YT Music Capture Changelog
+# Music Video Capture Changelog
 
 ## [Initial Version] - {PR_MERGE_DATE}
 

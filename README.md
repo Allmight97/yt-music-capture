@@ -1,4 +1,4 @@
-# YT Music Capture
+# Music Video Capture
 
 Save a YouTube music video as a song file before it disappears. One form in
 [TinyCast](https://github.com/abue-ammar/tinycast) turns a video into a tagged `.m4a` with cover art
