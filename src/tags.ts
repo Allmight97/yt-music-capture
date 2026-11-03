@@ -92,15 +92,16 @@ export function tracklistOf(chapters: Chapter[]): string {
   return chapters.map((chapter) => `${timestamp(chapter.startSeconds)} ${chapter.title}`).join("\n");
 }
 
-const ART_CREDIT = /^\W*(?:art(?:work)?|illustration|cover(?: art)?|drawing|picture|image)\s+by\s*:?\s*(.+?)\s*$/i;
+const ART_CREDIT =
+  /^\W*(?:art(?:work)?|illustration|cover(?: art)?|drawing|picture|image)\s*(?:by\b\s*:?\s*(.*?)|:?)\s*$/i;
 
 export function artCreditOf(description: string): string {
   const lines = description.split("\n").map((line) => line.trim());
   const at = lines.findIndex((line) => ART_CREDIT.test(line));
   if (at < 0) return "";
-  const name = lines[at].match(ART_CREDIT)![1];
-  const link = lines[at + 1]?.match(/^https?:\/\/(?:www\.)?(\S+)$/)?.[1];
-  return link ? `${name} · ${link}` : name;
+  const name = lines[at].match(ART_CREDIT)![1] ?? "";
+  const link = lines[at + 1]?.match(/^https?:\/\/(?:www\.)?(\S+)$/)?.[1] ?? "";
+  return [name, link].filter(Boolean).join(" · ");
 }
 
 export function fileComment(tags: SongTags): string {

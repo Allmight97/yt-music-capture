@@ -81,6 +81,10 @@ test("art credit takes the named artist and the link on the next line", () => {
   );
   assert.equal(artCreditOf("Art by: Someone\nThanks for listening"), "Someone");
   assert.equal(artCreditOf("Cover art by Kira"), "Kira");
+  assert.equal(artCreditOf("🦌  Artwork by \nhttps://www.artstation.com/artwork/5XekWW"), "artstation.com/artwork/5XekWW");
+  assert.equal(artCreditOf("🦌  Artwork \nhttps://wallhaven.cc/w/eyp3ro\n"), "wallhaven.cc/w/eyp3ro");
+  assert.equal(artCreditOf("Artwork by\n\nnot a link"), "");
+  assert.equal(artCreditOf("Picture this: a calm night"), "");
   assert.equal(artCreditOf("Support the artist by streaming"), "");
   assert.equal(artCreditOf(""), "");
 });
