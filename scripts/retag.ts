@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileComment, suggestTags, videoIdOf, videoInfoOf, watchUrl } from "../src/tags";
 
-type Change = { file: string; comment: string; tracklist: string };
+type Change = { file: string; url: string; comment: string; tracklist: string };
 
 const worker = join(__dirname, "..", "assets", "capture.zsh");
 
@@ -29,7 +29,7 @@ function plan(folder: string, out: string) {
     }
     const json = JSON.parse(execFileSync("/bin/zsh", ["-f", worker, "probe", watchUrl(id)], { encoding: "utf8" }));
     const tags = suggestTags(videoInfoOf(json, watchUrl(id)), "");
-    changes.push({ file, comment: fileComment(tags), tracklist: tags.tracklist });
+    changes.push({ file, url: watchUrl(id), comment: fileComment(tags), tracklist: tags.tracklist });
     console.error(`\n== ${file}\n${fileComment(tags)}`);
   }
   writeFileSync(out, JSON.stringify(changes, null, 2));
@@ -39,7 +39,7 @@ function plan(folder: string, out: string) {
 function apply(planFile: string) {
   const changes = JSON.parse(readFileSync(planFile, "utf8")) as Change[];
   for (const change of changes) {
-    execFileSync("/bin/zsh", ["-f", worker, "credit", change.file, change.comment, change.tracklist]);
+    execFileSync("/bin/zsh", ["-f", worker, "retag", change.file, change.comment, change.tracklist, change.url]);
     console.error(`retagged ${change.file}`);
   }
 }

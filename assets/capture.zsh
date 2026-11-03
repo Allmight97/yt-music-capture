@@ -25,7 +25,16 @@ use_cookies() {
 }
 
 credit() {
-  AtomicParsley "$1" --comment "$2" --lyrics "$3" "${@:4}" --overWrite >/dev/null
+  local from=$1 to=$2 comment=$3 tracklist=$4 url=$5
+  ffmpeg -v error -y -i "$from" -map 0 -c copy -map_metadata 0 \
+    -metadata "comment=$comment" -metadata "lyrics=$tracklist" "$to"
+  AtomicParsley "$to" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes --overWrite >/dev/null
+}
+
+retag() {
+  local song=$1 retagged=${1:r}.retagging.m4a
+  credit "$song" "$retagged" "$2" "$3" "$4"
+  mv -f "$retagged" "$song"
 }
 
 report() {
@@ -76,8 +85,8 @@ run() {
     -metadata "title=$title" -metadata "artist=$artist" -metadata "album_artist=$album_artist" \
     -metadata "album=$album" -metadata "grouping=$grouping" -metadata "date=$year" \
     -metadata "description=$description" -metadata "synopsis=$description" \
-    "$work/song.m4a"
-  credit "$work/song.m4a" "$comment" "$tracklist" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes
+    "$work/tagged.m4a"
+  credit "$work/tagged.m4a" "$work/song.m4a" "$comment" "$tracklist" "$url"
 
   mkdir -p "${destination:h}"
   cp -n "$work/song.m4a" "$destination"
@@ -91,7 +100,7 @@ run() {
 
 case ${1:-} in
   probe) shift; probe "$@" ;;
-  credit) shift; credit "$@" ;;
+  retag) shift; retag "$@" ;;
   run)
     job=$2 log=${2%.json}.log title="" artist=""
     exec >>"$log" 2>&1
@@ -100,5 +109,5 @@ case ${1:-} in
       if (( code )); then report "Capture failed: $title. $(tail -n 1 "$log")"
       else rm -f "$job" "$log"; report "Captured $artist – $title"; fi' EXIT
     run ;;
-  *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json> | credit <file.m4a> <comment> <tracklist>"; exit 2 ;;
+  *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json> | retag <file.m4a> <comment> <tracklist> <url>"; exit 2 ;;
 esac

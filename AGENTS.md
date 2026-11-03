@@ -7,8 +7,8 @@ finishes after the window closes. Raycast Store submission is open work in issue
 ## Map
 
 - `assets/capture.zsh`: the worker. `probe <url> [cookies]` prints the form's metadata as JSON and
-  saves yt-dlp's full lookup; `run <job.json>` does the capture; `credit <file> <comment>
-  <tracklist>` writes the comment and Lyrics, for `run` and the retag script. It owns every call
+  saves yt-dlp's full lookup; `run <job.json>` does the capture; `retag <file> <comment>
+  <tracklist> <url>` rewrites a song's comment and Lyrics. Both use `credit`. It owns every call
   to yt-dlp, ffmpeg, AtomicParsley, the share mount and the copies. Run it from a terminal to debug.
 - `src/worker.ts`: the extension's only link to the worker: `probe`, the job file in
   `~/Library/Caches/yt-music-capture/`, the detached launch, and the done link.
@@ -60,8 +60,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
 - Cover: 1400×1400, the whole thumbnail centred on a blurred copy (owner's choice; a square crop
   cuts off on-thumbnail text). The thumbnail goes to ffmpeg as served, to avoid an extra lossy step.
 - ffmpeg writes the tags, including Grouping (`©grp`) and the description (`desc`, `ldes`);
-  AtomicParsley adds `----:com.apple.iTunes:SOURCE_URL`. Never use yt-dlp `--parse-metadata`: it
-  splits on `:` and breaks URLs.
+  AtomicParsley adds only `----:com.apple.iTunes:SOURCE_URL`, which ffmpeg cannot write. Keep text
+  tags out of AtomicParsley: it cuts them at 255 characters, and a tracklist comment is longer.
+  Never use yt-dlp `--parse-metadata`: it splits on `:` and breaks URLs.
 - Comment (`fileComment`): channel and `youtu.be` link, the art credit, then the tracklist from
   yt-dlp's `chapters`. It credits the uploader and the artists in a mix. Never derive a tracklist
   from description text: no chapters means no tracklist (owner's choice). The tracklist also goes
