@@ -27,14 +27,16 @@ use_cookies() {
 credit() {
   local from=$1 to=$2 comment=$3 tracklist=$4 url=$5
   ffmpeg -v error -y -i "$from" -map 0 -c copy -map_metadata 0 \
-    -metadata "comment=$comment" -metadata "lyrics=$tracklist" "$to"
-  AtomicParsley "$to" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes --overWrite >/dev/null
+    -metadata "comment=$comment" -metadata "lyrics=$tracklist" "$to" &&
+    AtomicParsley "$to" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes --overWrite >/dev/null
 }
 
 retag() {
-  local song=$1 retagged=${1:r}.retagging.m4a
-  credit "$song" "$retagged" "$2" "$3" "$4"
-  mv -f "$retagged" "$song"
+  local song=$1 scratch result=0
+  scratch=$(mktemp -d "${song:h}/.retag.XXXXXX")
+  credit "$song" "$scratch/song.m4a" "$2" "$3" "$4" && mv -f "$scratch/song.m4a" "$song" || result=$?
+  rm -rf "$scratch"
+  return $result
 }
 
 report() {

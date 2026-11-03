@@ -97,11 +97,14 @@ const ART_CREDIT =
 
 export function artCreditOf(description: string): string {
   const lines = description.split("\n").map((line) => line.trim());
-  const at = lines.findIndex((line) => ART_CREDIT.test(line));
-  if (at < 0) return "";
-  const name = lines[at].match(ART_CREDIT)![1] ?? "";
-  const link = lines[at + 1]?.match(/^https?:\/\/(?:www\.)?(\S+)$/)?.[1] ?? "";
-  return [name, link].filter(Boolean).join(" · ");
+  for (const [at, line] of lines.entries()) {
+    const heading = line.match(ART_CREDIT);
+    if (!heading) continue;
+    const link = lines[at + 1]?.match(/^https?:\/\/(?:www\.)?(\S+)$/)?.[1] ?? "";
+    const credit = [heading[1] ?? "", link].filter(Boolean).join(" · ");
+    if (credit) return credit;
+  }
+  return "";
 }
 
 export function fileComment(tags: SongTags): string {

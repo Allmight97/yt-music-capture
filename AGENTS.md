@@ -14,8 +14,8 @@ finishes after the window closes. Raycast Store submission is open work in issue
   `~/Library/Caches/yt-music-capture/`, the detached launch, and the done link.
 - `src/tags.ts`, `src/destination.ts`: pure rules for tags, album, video ids and save paths. Tested.
 - `scripts/retag.ts`: brings songs captured by older versions up to the current comment and Lyrics.
-  `plan <folder> <plan.json>` looks each `SOURCE_URL` up once and prints the result; `apply
-  <plan.json>` writes it. Same rules as a capture: `tags.ts` and the worker's `credit`.
+  `plan <folder> <plan.json>` looks each `SOURCE_URL` up once and prints each song's current and
+  new values, so hand edits are seen before `apply <plan.json>` writes them. Same rules as a capture: `tags.ts` and the worker's `credit`.
 - `src/capture-song.tsx`: the form. `src/show-capture-results.ts`: shows finished captures.
 
 ## Rules and why
