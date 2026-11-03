@@ -4,10 +4,10 @@ import { safeFileName, SongTags } from "./tags";
 export type Layout = "captures" | "captures-by-artist" | "artist" | "artist-album" | "custom";
 
 export const LAYOUTS: { value: Layout; title: string }[] = [
-  { value: "captures", title: "Capture folder: Artist - Title.m4a" },
-  { value: "captures-by-artist", title: "Capture folder: Artist / Title.m4a" },
-  { value: "artist", title: "Music folder: Artist / Title.m4a" },
-  { value: "artist-album", title: "Music folder: Artist / Album / Title.m4a" },
+  { value: "captures", title: "Capture folder: Artist - Title" },
+  { value: "captures-by-artist", title: "Capture folder / Artist" },
+  { value: "artist", title: "Music folder / Artist" },
+  { value: "artist-album", title: "Music folder / Artist / Album" },
   { value: "custom", title: "Choose a folder" },
 ];
 

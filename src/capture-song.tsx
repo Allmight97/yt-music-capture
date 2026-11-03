@@ -5,6 +5,7 @@ import {
   closeMainWindow,
   Form,
   getPreferenceValues,
+  LocalStorage,
   getSelectedText,
   popToRoot,
   showHUD,
@@ -29,6 +30,17 @@ type Preferences = {
 
 const YOUTUBE_URL = /^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)\/\S+$/i;
 
+type Remembered = { layout: Layout; customFolder?: string };
+
+const rememberKey = (info: VideoInfo) => `destination:${info.channelUrl || info.channel}`;
+
+async function recall(info: VideoInfo): Promise<Remembered | undefined> {
+  const saved = await LocalStorage.getItem<string>(rememberKey(info));
+  if (!saved) return undefined;
+  const remembered = JSON.parse(saved) as Remembered;
+  return LAYOUTS.some((option) => option.value === remembered.layout) ? remembered : undefined;
+}
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -48,6 +60,7 @@ export default function Command() {
   const [tags, setTags] = useState<SongTags>({ artist: "", title: "", album: "", year: "", comment: "" });
   const [layout, setLayout] = useState<Layout>(preferences.layout);
   const [customFolder, setCustomFolder] = useState<string[]>([]);
+  const [isRemembered, setIsRemembered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -62,10 +75,14 @@ export default function Command() {
     let cancelled = false;
     setIsLoading(true);
     probe(url.trim(), preferences.cookiesFromBrowser)
-      .then((found) => {
+      .then(async (found) => {
+        const remembered = await recall(found);
         if (cancelled) return;
         setInfo(found);
         setTags(suggestTags(found, preferences.defaultAlbum, today()));
+        setLayout(remembered?.layout ?? preferences.layout);
+        setCustomFolder(remembered?.customFolder ? [remembered.customFolder] : []);
+        setIsRemembered(Boolean(remembered));
       })
       .catch((e: Error) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setIsLoading(false));
@@ -74,10 +91,10 @@ export default function Command() {
     };
   }, [url]);
 
-  async function capture() {
+  async function capture(chosen: Layout) {
     if (!info) return;
     try {
-      const destination = songPath(layout, tags, {
+      const destination = songPath(chosen, tags, {
         musicRoot: join(volume, preferences.nasMusicFolder),
         captureFolder: preferences.captureFolder,
         customFolder: customFolder[0],
@@ -92,7 +109,11 @@ export default function Command() {
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
       });
-      await showHUD(`Capturing ${tags.artist} – ${tags.title}. A notification follows when done.`);
+      await LocalStorage.setItem(
+        rememberKey(info),
+        JSON.stringify({ layout: chosen, customFolder: chosen === "custom" ? customFolder[0] : undefined }),
+      );
+      await showHUD(`Capturing ${tags.artist} – ${tags.title}. You will see a message when it is done.`);
       await closeMainWindow();
       await popToRoot();
     } catch (e) {
@@ -108,7 +129,23 @@ export default function Command() {
   return (
     <Form
       isLoading={isLoading}
-      actions={<ActionPanel>{info && <Action.SubmitForm title="Capture Song" onSubmit={capture} />}</ActionPanel>}
+      actions={
+        info && (
+          <ActionPanel>
+            <Action.SubmitForm title="Capture Song" onSubmit={() => capture(layout)} />
+            <ActionPanel.Section title="Capture To">
+              {LAYOUTS.filter((option) => option.value !== "custom" && option.value !== layout).map((option) => (
+                <Action.SubmitForm
+                  key={option.value}
+                  title={`Capture to ${option.title}`}
+                  onSubmit={() => capture(option.value)}
+                />
+              ))}
+              {layout !== "custom" && <Action title="Choose a Folder…" onAction={() => setLayout("custom")} />}
+            </ActionPanel.Section>
+          </ActionPanel>
+        )
+      }
     >
       <Form.TextField id="url" title="YouTube URL" placeholder="https://www.youtube.com/watch?v=…" value={url} onChange={setUrl} />
       {error && <Form.Description title="Error" text={error} />}
@@ -122,7 +159,13 @@ export default function Command() {
           <Form.TextField id="year" title="Year" {...field("year")} />
           <Form.TextArea id="comment" title="Comment" {...field("comment")} />
           <Form.Separator />
-          <Form.Dropdown id="layout" title="Save To" value={layout} onChange={(value) => setLayout(value as Layout)}>
+          <Form.Dropdown
+            id="layout"
+            title="Save To"
+            info={isRemembered ? `Remembered from your last capture from ${info.channel}` : undefined}
+            value={layout}
+            onChange={(value) => setLayout(value as Layout)}
+          >
             {LAYOUTS.map((option) => (
               <Form.Dropdown.Item key={option.value} value={option.value} title={option.title} />
             ))}

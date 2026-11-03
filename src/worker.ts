@@ -16,7 +16,7 @@ export type Job = SongTags & {
 };
 
 const script = () => join(environment.assetsPath, "capture.zsh");
-const jobsFolder = join(homedir(), "Library", "Caches", "yt-music-capture");
+export const jobsFolder = join(homedir(), "Library", "Caches", "yt-music-capture");
 
 export function probe(url: string, cookies: string): Promise<VideoInfo> {
   return new Promise((resolve, reject) => {

@@ -16,6 +16,13 @@
       "subtitle": "YT Music Capture",
       "description": "Download a YouTube music video's audio with cover art and tags, then file it.",
       "mode": "view"
+    },
+    {
+      "name": "show-capture-results",
+      "title": "Show Capture Results",
+      "subtitle": "YT Music Capture",
+      "description": "Shows finished captures. The capture worker runs it when a song is done.",
+      "mode": "no-view"
     }
   ],
   "preferences": [
@@ -46,25 +53,25 @@
     {
       "name": "layout",
       "title": "Default Save Location",
-      "description": "Prefilled in the form; you can change it per song.",
+      "description": "Used when a channel has no remembered destination. Change it per song in the form or its ⌘K menu.",
       "type": "dropdown",
       "default": "captures",
       "required": true,
       "data": [
         {
-          "title": "Capture folder: Artist - Title.m4a",
+          "title": "Capture folder: Artist - Title",
           "value": "captures"
         },
         {
-          "title": "Capture folder: Artist / Title.m4a",
+          "title": "Capture folder / Artist",
           "value": "captures-by-artist"
         },
         {
-          "title": "Music folder: Artist / Title.m4a",
+          "title": "Music folder / Artist",
           "value": "artist"
         },
         {
-          "title": "Music folder: Artist / Album / Title.m4a",
+          "title": "Music folder / Artist / Album",
           "value": "artist-album"
         },
         {

@@ -21,9 +21,9 @@ use_cookies() {
   return 0
 }
 
-notify() {
-  osascript -e 'on run argv' -e 'display notification (item 2 of argv) with title (item 1 of argv)' -e 'end run' \
-    "$1" "$2" >/dev/null 2>&1 || true
+report() {
+  print -r -- "$1" >"${job%.json}.result"
+  open -g "tinycast://extensions/allmight97/yt-music-capture/show-capture-results"
 }
 
 probe() {
@@ -78,8 +78,8 @@ case ${1:-} in
     exec >>"$log" 2>&1
     work=$(mktemp -d)
     trap 'code=$?; rm -rf "$work"
-      if (( code )); then notify "Capture failed: $title" "$(tail -n 1 "$log")"
-      else rm -f "$job" "$log"; notify "Captured" "$artist – $title"; fi' EXIT
+      if (( code )); then report "Capture failed: $title. $(tail -n 1 "$log")"
+      else rm -f "$job" "$log"; report "Captured $artist – $title"; fi' EXIT
     run ;;
   *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json>"; exit 2 ;;
 esac

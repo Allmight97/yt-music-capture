@@ -10,15 +10,21 @@ capture finishes even after the TinyCast window closes.
 - `src/worker.ts`: the extension's only link to the worker: runs `probe`, writes a job file to
   `~/Library/Caches/yt-music-capture/`, and launches `run` detached.
 - `src/tags.ts`, `src/destination.ts`: pure tag suggestions and save-path layouts. `npm test`.
-- `src/capture-song.tsx`: the form.
+- `src/capture-song.tsx`: the form. `src/show-capture-results.ts`: the worker's way back into
+  TinyCast.
 
 ## Decisions
 
 - **The capture runs outside TinyCast.** TinyCast stops a command's JavaScript when its window
   closes. `startCapture` launches the worker through `perl` with `fork` + `setsid`, so it is in its
-  own session and survives even a kill of TinyCast's process group. It reports through macOS
-  notifications. On success it deletes its job file and log; on failure it keeps both, and
-  `zsh -f assets/capture.zsh run <job.json>` retries it.
+  own session and survives even a kill of TinyCast's process group. On success it deletes its job
+  file and log; on failure it keeps both, and `zsh -f assets/capture.zsh run <job.json>` retries it.
+- **Results show as a TinyCast HUD, never a macOS notification.** `osascript display notification`
+  posts as Script Editor, and clicking it opened Script Editor and its Open dialog. The worker writes
+  a `.result` file beside the job and opens the `show-capture-results` deeplink with `open -g`;
+  that no-view command shows every waiting result and deletes it. The link carries no input, so
+  TinyCast does not ask before running it. Never add `launchType=background`: TinyCast shows no HUD
+  for a background run.
 - **The worker starts with `zsh -f`** and appends Homebrew and `~/.local/bin` to `PATH`. Startup files
   must not change which tools it finds, and a GUI app has no shell `PATH`.
 - **IPv4 is automatic.** Every yt-dlp call that fails is retried once with `--force-ipv4`. YouTube's
@@ -31,8 +37,11 @@ capture finishes even after the TinyCast window closes.
 - **Tags**: ffmpeg writes title, artist, album, year, comment, and the video description (`desc`,
   `ldes`). AtomicParsley adds the source URL as `----:com.apple.iTunes:SOURCE_URL`, which survives
   edits to the comment. Do not use yt-dlp `--parse-metadata`; it splits on `:` and broke URLs.
-- **Save location**: a settings default, changeable per song in the form. The settings dropdown
-  duplicates `LAYOUTS`; a test keeps them equal. Default is one capture folder, `!YT Captures`.
+- **Save location** comes from, in order: the destination last used for that channel (TinyCast
+  `LocalStorage`, keyed by channel URL, custom folder included), else the settings default
+  (`!YT Captures`). The form's Save To field and its ⌘K "Capture to …" actions change it per song,
+  and each capture updates the channel's memory. The settings dropdown duplicates `LAYOUTS`; a test
+  keeps them equal.
 - **Never overwrite.** An existing file at the destination fails the capture.
 - **NAS before Apple Music.** The optional Apple Music step (off by default) copies into Music's
   "Automatically Add to Music" folder, which moves files in.
