@@ -24,6 +24,10 @@ export function doneLink(): string {
   return `${scheme}://extensions/${environment.ownerOrAuthorName}/${environment.extensionName}/show-capture-results`;
 }
 
+export function mountTable(): Promise<string> {
+  return new Promise((resolve) => execFile("/sbin/mount", (error, stdout) => resolve(error ? "" : String(stdout))));
+}
+
 export function probe(url: string, cookies: string): Promise<VideoInfo> {
   return new Promise((resolve, reject) => {
     execFile(

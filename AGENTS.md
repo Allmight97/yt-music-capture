@@ -5,7 +5,7 @@ location. A detached worker then makes a tagged `.m4a` with square cover art and
 capture finishes even after the TinyCast window closes.
 
 - `assets/capture.zsh`: the worker. `probe <url> [cookies]` prints video metadata as JSON;
-  `run <job.json>` does the capture. It owns every call to yt-dlp, ffmpeg, AtomicParsley, the NAS
+  `run <job.json>` does the capture. It owns every call to yt-dlp, ffmpeg, AtomicParsley, the share
   mount and the copies. Run it straight from a terminal to debug.
 - `src/worker.ts`: the extension's only link to the worker: runs `probe`, writes a job file to
   `~/Library/Caches/yt-music-capture/`, and launches `run` detached.
@@ -39,16 +39,23 @@ capture finishes even after the TinyCast window closes.
   transcode is yt-dlp's fallback when a video has no AAC stream. Do not add another.
 - **Cover is a 1400×1400 blurred fill.** The full 16:9 thumbnail sits centered on a blurred copy of
   itself. Owner chose this over square crop, which cuts off on-thumbnail text.
-- **Tags**: ffmpeg writes title, artist, album, year, comment, and the video description (`desc`,
+- **Tags**: ffmpeg writes title, artist, album artist (blank in the form means the artist), album, year, comment, and the video description (`desc`,
   `ldes`). AtomicParsley adds the source URL as `----:com.apple.iTunes:SOURCE_URL`, which survives
   edits to the comment. Do not use yt-dlp `--parse-metadata`; it splits on `:` and broke URLs.
+- **Settings name one folder, the Music Library.** Capture folders sit inside it. There is no share
+  URL setting: each time the form opens it reads `/sbin/mount` and remembers every mounted SMB/AFP
+  share by volume (`LocalStorage` `shares`), and a job carries the share for its destination's
+  volume so the worker can remount it. A share never seen mounted cannot be remounted; the capture
+  then fails with "did not mount".
+- **Artist folders use the album artist** when set, so a remix can file under the remixer while
+  the track artist stays the original.
 - **Save location** comes from, in order: the destination last used for that channel (TinyCast
   `LocalStorage`, keyed by channel URL, custom folder included), else the settings default
-  (`!YT Captures`). The form's Save To field and its ⌘K "Capture to …" actions change it per song,
+  (`!YT Captures`). The form's Save To field and its ⌘K menu (every destination is listed) change it per song,
   and each capture updates the channel's memory. The settings dropdown duplicates `LAYOUTS`; a test
   keeps them equal.
 - **Never overwrite.** An existing file at the destination fails the capture.
-- **NAS before Apple Music.** The optional Apple Music step (off by default) copies into Music's
+- **Library before Apple Music.** The optional Apple Music step (off by default) copies into Music's
   "Automatically Add to Music" folder, which moves files in.
 
 ## Install and checks

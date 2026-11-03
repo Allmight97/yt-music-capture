@@ -30,27 +30,17 @@
   ],
   "preferences": [
     {
-      "name": "nasShareUrl",
-      "title": "NAS Share",
-      "description": "SMB share to mount when it is not mounted. macOS uses the login it saved for that server.",
-      "type": "textfield",
-      "default": "smb://nas.local/DATA",
-      "required": true,
-      "placeholder": "smb://nas.local/DATA"
-    },
-    {
-      "name": "nasMusicFolder",
-      "title": "NAS Music Folder",
-      "description": "Folder inside the mounted share that holds your music.",
-      "type": "textfield",
-      "default": "media/Music",
-      "required": true,
-      "placeholder": "media/Music"
+      "name": "musicLibrary",
+      "title": "Music Library",
+      "description": "Your music folder, on this Mac or on a network share. Artist folders are made here. A network share is remounted automatically once it has been mounted while the form was open.",
+      "type": "directory",
+      "default": "~/Music",
+      "required": true
     },
     {
       "name": "captureFolder",
       "title": "Capture Folder",
-      "description": "Folder inside the music folder for the capture-folder layouts.",
+      "description": "Folder inside the Music Library for the capture-folder destinations.",
       "type": "textfield",
       "default": "!YT Captures",
       "required": true,
@@ -58,7 +48,7 @@
     },
     {
       "name": "layout",
-      "title": "Default Save Location",
+      "title": "Default Destination",
       "description": "Used when a channel has no remembered destination. Change it per song in the form or its ⌘K menu.",
       "type": "dropdown",
       "default": "captures",
@@ -73,11 +63,11 @@
           "value": "captures-by-artist"
         },
         {
-          "title": "Music folder / Artist",
+          "title": "Library / Artist",
           "value": "artist"
         },
         {
-          "title": "Music folder / Artist / Album",
+          "title": "Library / Artist / Album",
           "value": "artist-album"
         },
         {
