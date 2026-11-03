@@ -91,5 +91,9 @@ submission; a second linter such as Oxlint would only duplicate it. Keep `-o bui
 `~/.config/raycast/extensions/`. TinyCast's Install from GitHub ignores the script and runs
 `ray build -e dist -o <dir>` itself after `<package manager> install --ignore-scripts`.
 
+`CHANGELOG.md` has one `## [x.y.z] - YYYY-MM-DD` section per tagged release, grouped under
+`### Added`, `### Changed` and `### Fixed`. The Raycast Store wants its submission entry headed
+`## [Title] - {PR_MERGE_DATE}`; add that only in the store PR.
+
 To try a local change in TinyCast: `npm run build`, then Settings → Extensions → Install New → Add
 from folder → `build/`.

@@ -14,7 +14,7 @@ export type Job = SongTags & {
   addToMusic: boolean;
   cookies: string;
   grouping: string;
-  infoJson: string;
+  id: string;
   doneLink: string;
 };
 

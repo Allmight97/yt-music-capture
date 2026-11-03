@@ -94,6 +94,6 @@ export function safeFileName(name: string): string {
   );
 }
 
-export function folderArtist(tags: SongTags): string {
+export function albumArtistOf(tags: SongTags): string {
   return tags.albumArtist.trim() || tags.artist;
 }

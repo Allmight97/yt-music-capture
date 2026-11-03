@@ -12,11 +12,10 @@ import {
   showToast,
   Toast,
 } from "@raycast/api";
-import { join } from "node:path";
 import { useEffect, useState } from "react";
 import { Layout, LAYOUTS, networkShares, songPath, volumeOf } from "./destination";
-import { SongTags, suggestTags, VideoInfo } from "./tags";
-import { doneLink, jobsFolder, mountTable, probe, startCapture } from "./worker";
+import { albumArtistOf, SongTags, suggestTags, VideoInfo } from "./tags";
+import { doneLink, mountTable, probe, startCapture } from "./worker";
 
 type Preferences = {
   musicLibrary: string;
@@ -117,14 +116,14 @@ export default function Command() {
         ...tags,
         url: info.webpageUrl,
         description: info.description,
-        albumArtist: tags.albumArtist.trim() || tags.artist,
+        albumArtist: albumArtistOf(tags),
         destination,
         share: (await learnShares())[volumeOf(destination)] ?? "",
         volume: volumeOf(destination),
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
         grouping: preferences.grouping.trim(),
-        infoJson: join(jobsFolder, `probe-${info.id}.info.json`),
+        id: info.id,
         doneLink: doneLink(),
       });
       await LocalStorage.setItem(

@@ -40,7 +40,7 @@ run() {
   url=$(field url) artist=$(field artist) album_artist=$(field albumArtist) title=$(field title) album=$(field album)
   year=$(field year) comment=$(field comment) description=$(field description) grouping=$(field grouping)
   destination=$(field destination) share=$(field share) volume=$(field volume)
-  add_to_music=$(field addToMusic) done_link=$(field doneLink) info_json=$(field infoJson)
+  add_to_music=$(field addToMusic) done_link=$(field doneLink) info_json=$cache/probe-$(field id).info.json
   use_cookies "$(field cookies)"
 
   if [[ -n $share && $destination == $volume/* ]]; then
@@ -50,7 +50,7 @@ run() {
   [[ ! -e $destination ]] || { print "Already exists: $destination"; exit 1; }
 
   local fetch=(-f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail --convert-thumbnails jpg
-    --newline -o "$work/source.%(ext)s")
+    --no-progress -o "$work/source.%(ext)s")
   if ! [[ -f $info_json ]] || ! yt-dlp "${ytdlp_common[@]}" --load-info-json "$info_json" "${fetch[@]}"; then
     ytdlp "${fetch[@]}" -- "$url"
   fi

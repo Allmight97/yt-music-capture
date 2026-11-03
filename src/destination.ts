@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { folderArtist, safeFileName, SongTags } from "./tags";
+import { albumArtistOf, safeFileName, SongTags } from "./tags";
 
 export type Layout = "captures" | "captures-by-artist" | "artist" | "artist-album" | "custom";
 
@@ -38,7 +38,7 @@ export function networkShares(mountTable: string): Record<string, string> {
 
 export function songPath(layout: Layout, tags: SongTags, places: Places): string {
   const library = expandHome(places.library);
-  const artist = safeFileName(folderArtist(tags));
+  const artist = safeFileName(albumArtistOf(tags));
   const title = `${safeFileName(tags.title)}.m4a`;
   const flat = `${safeFileName(`${tags.artist} - ${tags.title}`)}.m4a`;
   const captures = join(library, places.captureFolder);
