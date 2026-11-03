@@ -4,7 +4,6 @@ export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:/usr/bin:/b
 
 ytdlp_common=(--no-playlist --no-warnings --js-runtimes node --extractor-args youtube:skip=hls)
 cache=$HOME/Library/Caches/yt-music-capture
-SAVED_ONLY=3
 
 ytdlp() {
   local err
@@ -60,7 +59,7 @@ run() {
   year=$(field year) comment=$(field comment) tracklist=$(field tracklist) description=$(field description)
   grouping=$(field grouping)
   destination=$(field destination) share=$(field share) volume=$(field volume)
-  add_to_music=$(field addToMusic) done_link=$(field doneLink) info_json=$cache/probe-$(field id).info.json
+  done_link=$(field doneLink) info_json=$cache/probe-$(field id).info.json
   use_cookies "$(field cookies)"
 
   if [[ -n $share && $destination == $volume/* ]]; then
@@ -68,8 +67,6 @@ run() {
     [[ -d $volume ]] || { print "Network share did not mount at $volume"; exit 1; }
   fi
   [[ ! -e $destination ]] || { print "Already exists: $destination"; exit 1; }
-  local inbox=( "$HOME"/Music/Music/Media*/Automatically\ Add\ to\ Music*(N/) )
-  [[ $add_to_music != true ]] || (( ${#inbox} )) || { print "No 'Automatically Add to Music' folder found"; exit 1; }
 
   local fetch=(-f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail
     --no-progress -o "$work/source.%(ext)s")
@@ -95,10 +92,6 @@ run() {
 
   mkdir -p "${destination:h}"
   cp -n "$work/song.m4a" "$destination"
-
-  if [[ $add_to_music == true ]]; then
-    cp "$work/song.m4a" "$inbox[1]/" || { print "Add $destination to Music yourself."; exit $SAVED_ONLY; }
-  fi
 }
 
 case ${1:-} in
@@ -109,9 +102,8 @@ case ${1:-} in
     exec >>"$log" 2>&1
     work=$(mktemp -d)
     trap 'code=$?; rm -rf "$work"
-      if (( code == 0 )); then rm -f "$job" "$log"; report "Captured $artist – $title"
-      elif (( code == SAVED_ONLY )); then rm -f "$job"; report "Saved $title, not to Apple Music. $(tail -n 1 "$log")"
-      else report "Capture failed: $title. $(tail -n 1 "$log")"; fi' EXIT
+      if (( code )); then report "Capture failed: $title. $(tail -n 1 "$log")"
+      else rm -f "$job" "$log"; report "Captured $artist – $title"; fi' EXIT
     run ;;
   *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json> | retag <file.m4a> <comment> <tracklist> <url>"; exit 2 ;;
 esac

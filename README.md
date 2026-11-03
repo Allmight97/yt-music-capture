@@ -22,7 +22,6 @@ Raycast itself yet.
 - **Keeps going in the background.** Close the window; a message says when the song is saved.
 - **Network share aware.** If your library is on a NAS, it is remounted when needed, using the
   login in your keychain.
-- **Optional Apple Music import** through Music's "Automatically Add to Music" folder.
 
 ## Requirements
 

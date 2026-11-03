@@ -23,7 +23,6 @@ type Preferences = {
   layout: Layout;
   mixAlbum: string;
   grouping: string;
-  addToMusic: boolean;
   cookiesFromBrowser: string;
 };
 
@@ -128,7 +127,6 @@ export default function Command() {
         destination,
         share: (await learnShares())[volumeOf(destination)] ?? "",
         volume: volumeOf(destination),
-        addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
         grouping: preferences.grouping.trim(),
         id: info.id,

@@ -2,10 +2,9 @@
 
 ## [Unreleased]
 
-### Fixed
+### Removed
 
-- A missing Apple Music folder fails the capture before anything is downloaded or saved. If the
-  Music copy fails after the library copy, the result says the song was saved and names the file.
+- The Add to Apple Music setting. Captures go to the music library only; add them to Music yourself.
 
 ### Changed
 

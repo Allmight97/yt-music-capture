@@ -11,7 +11,6 @@ export type Job = SongTags & {
   destination: string;
   share: string;
   volume: string;
-  addToMusic: boolean;
   cookies: string;
   grouping: string;
   id: string;

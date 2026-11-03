@@ -9,7 +9,8 @@ finishes after the window closes. Raycast Store submission is open work in issue
 - `assets/capture.zsh`: the worker. `probe <url> [cookies]` prints the form's metadata as JSON and
   saves yt-dlp's full lookup; `run <job.json>` does the capture; `retag <file> <comment>
   <tracklist> <url>` rewrites a song's comment and Lyrics. Both use `credit`. It owns every call
-  to yt-dlp, ffmpeg, AtomicParsley, the share mount and the copies. Run it from a terminal to debug.
+  to yt-dlp, ffmpeg, AtomicParsley, the share mount and the library copy. Run it from a terminal
+  to debug.
 - `src/worker.ts`: the extension's only link to the worker: `probe`, the job file in
   `~/Library/Caches/yt-music-capture/`, the detached launch, and the done link.
 - `src/tags.ts`, `src/destination.ts`: pure rules for tags, album, video ids and save paths. Tested.
@@ -29,9 +30,7 @@ finishes after the window closes. Raycast Store submission is open work in issue
   `startCapture` launches the worker through `perl` `fork` + `setsid`, so it survives a kill of
   TinyCast's process group.
 - Success deletes the job file and log; failure keeps both for `zsh -f assets/capture.zsh run
-  <job.json>`. A failed Apple Music copy after the library copy exits `SAVED_ONLY` and deletes the
-  job, because a rerun would stop at the existing file; its result names the file to add by hand.
-  `run` checks every destination before it downloads, so the usual failures leave nothing behind.
+  <job.json>`.
 - Results come back as a HUD, never `osascript display notification`: that posts as Script Editor,
   and clicking it opens Script Editor. The worker writes a `.result` beside the job and opens the
   job's `doneLink`; `show-capture-results` shows and deletes every waiting result.
@@ -69,6 +68,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
   yt-dlp's `chapters`. It credits the uploader and the artists in a mix. Never derive a tracklist
   from description text: no chapters means no tracklist (owner's choice). The tracklist also goes
   to Lyrics (`©lyr`): the iPhone shows no comments, and its Lyrics button is the place to read it.
+  The owner's device test (2026-11-03) shows Lyrics for these songs on Mac and iPhone, although
+  Apple's support page says the button is grayed out for non-catalog songs. Don't add chapter
+  markers: Apple Music drops them and users report iPhone playback problems with them.
 - Album, in order (`suggestAlbum`): YouTube's own, else the Mix Album template for videos of
   `MIX_MINUTES` or more (`{year}` = upload year), else blank. The owner files long mixes as
   "YYYY Mixes" and singles with no album.
@@ -82,8 +84,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
   with "did not mount".
 - Destination: the channel's last one, else the settings default. The form and its ⌘K menu change
   it per song. `LAYOUTS` and the settings dropdown must match; a test enforces it.
-- Never overwrite: an existing destination fails the capture. The library copy is written before
-  the optional Apple Music copy, because Music's "Automatically Add to Music" folder moves files in.
+- Never overwrite: an existing destination fails the capture.
+- The library is the source of truth; the owner adds songs to Apple Music by hand. There is no
+  Apple Music copy: it went unused and was the main source of half-finished captures.
 
 **Security**
 - Values reach tools as separate arguments, the URL after `--`, and the share URL reaches

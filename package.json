@@ -95,15 +95,6 @@
       "required": false
     },
     {
-      "name": "addToMusic",
-      "title": "Add to Apple Music",
-      "description": "Off by default. When on, each song is also copied into Music's \"Automatically Add to Music\" folder.",
-      "type": "checkbox",
-      "label": "Add to Apple Music",
-      "default": false,
-      "required": false
-    },
-    {
       "name": "cookiesFromBrowser",
       "title": "Use Cookies from Browser",
       "description": "Pass a signed-in browser's cookies for age-restricted or bot-checked videos.",
