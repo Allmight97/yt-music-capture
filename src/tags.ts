@@ -26,6 +26,38 @@ export type SongTags = {
   tracklist: string;
 };
 
+export type ProbeJson = {
+  id: string;
+  title?: string;
+  channel?: string;
+  channel_url?: string;
+  upload_date?: string;
+  webpage_url?: string;
+  description?: string;
+  duration?: number;
+  chapters?: { start_time: number; title: string }[];
+  artist?: string;
+  track?: string;
+  album?: string;
+};
+
+export function videoInfoOf(json: ProbeJson, url: string): VideoInfo {
+  return {
+    id: json.id,
+    title: json.title ?? "",
+    channel: json.channel ?? "",
+    channelUrl: json.channel_url ?? "",
+    uploadDate: json.upload_date ?? "",
+    webpageUrl: json.webpage_url ?? url,
+    description: json.description ?? "",
+    durationSeconds: json.duration ?? 0,
+    chapters: (json.chapters ?? []).map((chapter) => ({ startSeconds: chapter.start_time, title: chapter.title })),
+    artist: json.artist ?? undefined,
+    track: json.track ?? undefined,
+    album: json.album ?? undefined,
+  };
+}
+
 const NOISE =
   /\s*[([](?:[^)\]]*\b(?:official|video|audio|lyrics?|visuali[sz]er|remaster(?:ed)?|hd|hq|4k|mv|m\/v|clip)\b[^)\]]*)[)\]]/gi;
 const SEPARATOR = /\s+[-–—|]\s+/;

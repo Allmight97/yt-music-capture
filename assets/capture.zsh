@@ -24,6 +24,10 @@ use_cookies() {
   return 0
 }
 
+credit() {
+  AtomicParsley "$1" --comment "$2" --lyrics "$3" "${@:4}" --overWrite >/dev/null
+}
+
 report() {
   print -r -- "$1" >"${job%.json}.result"
   open -g "$done_link"
@@ -41,7 +45,8 @@ probe() {
 run() {
   field() { plutil -extract "$1" raw -o - "$job" 2>/dev/null || true; }
   url=$(field url) artist=$(field artist) album_artist=$(field albumArtist) title=$(field title) album=$(field album)
-  year=$(field year) comment=$(field comment) description=$(field description) grouping=$(field grouping)
+  year=$(field year) comment=$(field comment) tracklist=$(field tracklist) description=$(field description)
+  grouping=$(field grouping)
   destination=$(field destination) share=$(field share) volume=$(field volume)
   add_to_music=$(field addToMusic) done_link=$(field doneLink) info_json=$cache/probe-$(field id).info.json
   use_cookies "$(field cookies)"
@@ -69,10 +74,10 @@ run() {
   ffmpeg -v error -y -i "$work/source.m4a" -i "$work/cover.jpg" \
     -map 0:a -map 1:v -c copy -disposition:v:0 attached_pic -map_metadata -1 \
     -metadata "title=$title" -metadata "artist=$artist" -metadata "album_artist=$album_artist" \
-    -metadata "album=$album" -metadata "grouping=$grouping" -metadata "date=$year" -metadata "comment=$comment" \
+    -metadata "album=$album" -metadata "grouping=$grouping" -metadata "date=$year" \
     -metadata "description=$description" -metadata "synopsis=$description" \
     "$work/song.m4a"
-  AtomicParsley "$work/song.m4a" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes --overWrite >/dev/null
+  credit "$work/song.m4a" "$comment" "$tracklist" --rDNSatom "$url" name=SOURCE_URL domain=com.apple.iTunes
 
   mkdir -p "${destination:h}"
   cp -n "$work/song.m4a" "$destination"
@@ -86,6 +91,7 @@ run() {
 
 case ${1:-} in
   probe) shift; probe "$@" ;;
+  credit) shift; credit "$@" ;;
   run)
     job=$2 log=${2%.json}.log title="" artist=""
     exec >>"$log" 2>&1
@@ -94,5 +100,5 @@ case ${1:-} in
       if (( code )); then report "Capture failed: $title. $(tail -n 1 "$log")"
       else rm -f "$job" "$log"; report "Captured $artist – $title"; fi' EXIT
     run ;;
-  *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json>"; exit 2 ;;
+  *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json> | credit <file.m4a> <comment> <tracklist>"; exit 2 ;;
 esac

@@ -11,6 +11,8 @@
 ### Added
 
 - Art and Tracklist fields in the form, filled from the video and editable before capture.
+- The tracklist is also written to Lyrics, for the iPhone's Lyrics button.
+- `scripts/retag.ts` brings songs captured by older versions up to the new comment and Lyrics.
 
 ## [0.1.1] - 2026-11-03
 

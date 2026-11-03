@@ -7,11 +7,15 @@ finishes after the window closes. Raycast Store submission is open work in issue
 ## Map
 
 - `assets/capture.zsh`: the worker. `probe <url> [cookies]` prints the form's metadata as JSON and
-  saves yt-dlp's full lookup; `run <job.json>` does the capture. It owns every call to yt-dlp,
-  ffmpeg, AtomicParsley, the share mount and the copies. Run it from a terminal to debug.
+  saves yt-dlp's full lookup; `run <job.json>` does the capture; `credit <file> <comment>
+  <tracklist>` writes the comment and Lyrics, for `run` and the retag script. It owns every call
+  to yt-dlp, ffmpeg, AtomicParsley, the share mount and the copies. Run it from a terminal to debug.
 - `src/worker.ts`: the extension's only link to the worker: `probe`, the job file in
   `~/Library/Caches/yt-music-capture/`, the detached launch, and the done link.
 - `src/tags.ts`, `src/destination.ts`: pure rules for tags, album, video ids and save paths. Tested.
+- `scripts/retag.ts`: brings songs captured by older versions up to the current comment and Lyrics.
+  `plan <folder> <plan.json>` looks each `SOURCE_URL` up once and prints the result; `apply
+  <plan.json>` writes it. Same rules as a capture: `tags.ts` and the worker's `credit`.
 - `src/capture-song.tsx`: the form. `src/show-capture-results.ts`: shows finished captures.
 
 ## Rules and why
@@ -60,7 +64,8 @@ finishes after the window closes. Raycast Store submission is open work in issue
   splits on `:` and breaks URLs.
 - Comment (`fileComment`): channel and `youtu.be` link, the art credit, then the tracklist from
   yt-dlp's `chapters`. It credits the uploader and the artists in a mix. Never derive a tracklist
-  from description text: no chapters means no tracklist (owner's choice).
+  from description text: no chapters means no tracklist (owner's choice). The tracklist also goes
+  to Lyrics (`©lyr`): the iPhone shows no comments, and its Lyrics button is the place to read it.
 - Album, in order (`suggestAlbum`): YouTube's own, else the Mix Album template for videos of
   `MIX_MINUTES` or more (`{year}` = upload year), else blank. The owner files long mixes as
   "YYYY Mixes" and singles with no album.

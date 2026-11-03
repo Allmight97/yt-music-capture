@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { SongTags, VideoInfo } from "./tags";
+import { SongTags, VideoInfo, videoInfoOf } from "./tags";
 
 export type Job = SongTags & {
   url: string;
@@ -39,24 +39,7 @@ export function probe(url: string, cookies: string): { result: Promise<VideoInfo
       { maxBuffer: 16 * 1024 * 1024 },
       (error, stdout, stderr) => {
         if (error) return reject(new Error(String(stderr).trim().split("\n").pop() || error.message));
-        const json = JSON.parse(String(stdout));
-        resolve({
-          id: json.id,
-          title: json.title ?? "",
-          channel: json.channel ?? "",
-          channelUrl: json.channel_url ?? "",
-          uploadDate: json.upload_date ?? "",
-          webpageUrl: json.webpage_url ?? url,
-          description: json.description ?? "",
-          durationSeconds: json.duration ?? 0,
-          chapters: (json.chapters ?? []).map((chapter: { start_time: number; title: string }) => ({
-            startSeconds: chapter.start_time,
-            title: chapter.title,
-          })),
-          artist: json.artist ?? undefined,
-          track: json.track ?? undefined,
-          album: json.album ?? undefined,
-        });
+        resolve(videoInfoOf(JSON.parse(String(stdout)), url));
       },
     );
   });
