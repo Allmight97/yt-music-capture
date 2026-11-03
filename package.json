@@ -2,9 +2,12 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "yt-music-capture",
   "title": "YT Music Capture",
-  "description": "Capture a YouTube music video as a tagged m4a with cover art and save it to the NAS, in the background.",
+  "description": "Save a YouTube music video as a tagged m4a with cover art in your music library.",
   "icon": "extension-icon.png",
   "author": "allmight97",
+  "platforms": [
+    "macOS"
+  ],
   "categories": [
     "Media"
   ],
@@ -13,46 +16,39 @@
     {
       "name": "capture-song",
       "title": "Capture Song",
-      "subtitle": "YT Music Capture",
+      "subtitle": "YouTube",
       "description": "Download a YouTube music video's audio with cover art and tags, then file it.",
       "mode": "view"
     },
     {
       "name": "show-capture-results",
       "title": "Show Capture Results",
-      "subtitle": "YT Music Capture",
+      "subtitle": "YouTube",
       "description": "Shows finished captures. The capture worker runs it when a song is done.",
       "mode": "no-view"
     }
   ],
   "preferences": [
     {
-      "name": "nasShareUrl",
-      "title": "NAS Share",
-      "description": "SMB share to mount when it is not mounted. The login comes from the macOS keychain.",
-      "type": "textfield",
-      "default": "smb://nas.local/DATA",
-      "required": true
-    },
-    {
-      "name": "nasMusicFolder",
-      "title": "NAS Music Folder",
-      "description": "Folder inside the mounted share that holds your music.",
-      "type": "textfield",
-      "default": "media/Music",
+      "name": "musicLibrary",
+      "title": "Music Library",
+      "description": "Your music folder, on this Mac or on a network share. Artist folders are made here. A network share is remounted automatically once it has been mounted while the form was open.",
+      "type": "directory",
+      "default": "~/Music",
       "required": true
     },
     {
       "name": "captureFolder",
       "title": "Capture Folder",
-      "description": "Folder inside the music folder for the capture-folder layouts.",
+      "description": "Folder inside the Music Library for the capture-folder destinations.",
       "type": "textfield",
       "default": "!YT Captures",
-      "required": true
+      "required": true,
+      "placeholder": "!YT Captures"
     },
     {
       "name": "layout",
-      "title": "Default Save Location",
+      "title": "Default Destination",
       "description": "Used when a channel has no remembered destination. Change it per song in the form or its ⌘K menu.",
       "type": "dropdown",
       "default": "captures",
@@ -67,11 +63,11 @@
           "value": "captures-by-artist"
         },
         {
-          "title": "Music folder / Artist",
+          "title": "Library / Artist",
           "value": "artist"
         },
         {
-          "title": "Music folder / Artist / Album",
+          "title": "Library / Artist / Album",
           "value": "artist-album"
         },
         {
@@ -86,7 +82,8 @@
       "description": "Album prefilled in the form.",
       "type": "textfield",
       "default": "YouTube",
-      "required": true
+      "required": true,
+      "placeholder": "YouTube"
     },
     {
       "name": "addToMusic",
@@ -129,16 +126,23 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.104.0"
+    "@raycast/api": "^2.10.1"
   },
   "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   },
   "scripts": {
     "build": "ray build -e dist -o build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "ray publish",
     "test": "node --import tsx --test test/*.test.ts"
   }
 }

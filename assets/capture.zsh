@@ -23,7 +23,7 @@ use_cookies() {
 
 report() {
   print -r -- "$1" >"${job%.json}.result"
-  open -g "tinycast://extensions/allmight97/yt-music-capture/show-capture-results"
+  open -g "$done_link"
 }
 
 probe() {
@@ -33,15 +33,15 @@ probe() {
 
 run() {
   field() { plutil -extract "$1" raw -o - "$job" 2>/dev/null || true; }
-  url=$(field url) artist=$(field artist) title=$(field title) album=$(field album)
+  url=$(field url) artist=$(field artist) album_artist=$(field albumArtist) title=$(field title) album=$(field album)
   year=$(field year) comment=$(field comment) description=$(field description)
   destination=$(field destination) share=$(field share) volume=$(field volume)
-  add_to_music=$(field addToMusic)
+  add_to_music=$(field addToMusic) done_link=$(field doneLink)
   use_cookies "$(field cookies)"
 
   if [[ -n $share && $destination == $volume/* ]]; then
     [[ -d $volume ]] || osascript -e "mount volume \"$share\"" >/dev/null
-    [[ -d $volume ]] || { print "NAS did not mount at $volume"; exit 1; }
+    [[ -d $volume ]] || { print "Network share did not mount at $volume"; exit 1; }
   fi
   [[ ! -e $destination ]] || { print "Already exists: $destination"; exit 1; }
 
@@ -55,7 +55,7 @@ run() {
 
   ffmpeg -v error -y -i "$work/source.m4a" -i "$work/cover.jpg" \
     -map 0:a -map 1:v -c copy -disposition:v:0 attached_pic -map_metadata -1 \
-    -metadata "title=$title" -metadata "artist=$artist" -metadata "album_artist=$artist" \
+    -metadata "title=$title" -metadata "artist=$artist" -metadata "album_artist=$album_artist" \
     -metadata "album=$album" -metadata "date=$year" -metadata "comment=$comment" \
     -metadata "description=$description" -metadata "synopsis=$description" \
     "$work/song.m4a"

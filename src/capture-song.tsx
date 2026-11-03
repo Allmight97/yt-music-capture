@@ -12,15 +12,13 @@ import {
   showToast,
   Toast,
 } from "@raycast/api";
-import { join } from "node:path";
 import { useEffect, useState } from "react";
-import { Layout, LAYOUTS, mountPoint, songPath } from "./destination";
+import { Layout, LAYOUTS, networkShares, songPath, volumeOf } from "./destination";
 import { SongTags, suggestTags, VideoInfo } from "./tags";
-import { probe, startCapture } from "./worker";
+import { doneLink, mountTable, probe, startCapture } from "./worker";
 
 type Preferences = {
-  nasShareUrl: string;
-  nasMusicFolder: string;
+  musicLibrary: string;
   captureFolder: string;
   layout: Layout;
   defaultAlbum: string;
@@ -41,6 +39,13 @@ async function recall(info: VideoInfo): Promise<Remembered | undefined> {
   return LAYOUTS.some((option) => option.value === remembered.layout) ? remembered : undefined;
 }
 
+async function learnShares(): Promise<Record<string, string>> {
+  const known = JSON.parse((await LocalStorage.getItem<string>("shares")) ?? "{}") as Record<string, string>;
+  const shares = { ...known, ...networkShares(await mountTable()) };
+  await LocalStorage.setItem("shares", JSON.stringify(shares));
+  return shares;
+}
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -54,10 +59,16 @@ async function initialUrl(): Promise<string> {
 
 export default function Command() {
   const preferences = getPreferenceValues<Preferences>();
-  const volume = mountPoint(preferences.nasShareUrl);
   const [url, setUrl] = useState("");
   const [info, setInfo] = useState<VideoInfo>();
-  const [tags, setTags] = useState<SongTags>({ artist: "", title: "", album: "", year: "", comment: "" });
+  const [tags, setTags] = useState<SongTags>({
+    artist: "",
+    albumArtist: "",
+    title: "",
+    album: "",
+    year: "",
+    comment: "",
+  });
   const [layout, setLayout] = useState<Layout>(preferences.layout);
   const [customFolder, setCustomFolder] = useState<string[]>([]);
   const [isRemembered, setIsRemembered] = useState(false);
@@ -66,6 +77,7 @@ export default function Command() {
 
   useEffect(() => {
     initialUrl().then(setUrl);
+    learnShares();
   }, []);
 
   useEffect(() => {
@@ -95,7 +107,7 @@ export default function Command() {
     if (!info) return;
     try {
       const destination = songPath(chosen, tags, {
-        musicRoot: join(volume, preferences.nasMusicFolder),
+        library: preferences.musicLibrary,
         captureFolder: preferences.captureFolder,
         customFolder: customFolder[0],
       });
@@ -103,11 +115,13 @@ export default function Command() {
         ...tags,
         url: info.webpageUrl,
         description: info.description,
+        albumArtist: tags.albumArtist.trim() || tags.artist,
         destination,
-        share: preferences.nasShareUrl,
-        volume,
+        share: (await learnShares())[volumeOf(destination)] ?? "",
+        volume: volumeOf(destination),
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
+        doneLink: doneLink(),
       });
       await LocalStorage.setItem(
         rememberKey(info),
@@ -134,30 +148,43 @@ export default function Command() {
           <ActionPanel>
             <Action.SubmitForm title="Capture Song" onSubmit={() => capture(layout)} />
             <ActionPanel.Section title="Capture To">
-              {LAYOUTS.filter((option) => option.value !== "custom" && option.value !== layout).map((option) => (
+              {LAYOUTS.filter((option) => option.value !== "custom").map((option) => (
                 <Action.SubmitForm
                   key={option.value}
                   title={`Capture to ${option.title}`}
                   onSubmit={() => capture(option.value)}
                 />
               ))}
-              {layout !== "custom" && <Action title="Choose a Folder…" onAction={() => setLayout("custom")} />}
+              <Action title="Choose a Folder…" onAction={() => setLayout("custom")} />
             </ActionPanel.Section>
           </ActionPanel>
         )
       }
     >
-      <Form.TextField id="url" title="YouTube URL" placeholder="https://www.youtube.com/watch?v=…" value={url} onChange={setUrl} />
+      <Form.TextField
+        id="url"
+        title="YouTube URL"
+        placeholder="https://www.youtube.com/watch?v=…"
+        value={url}
+        onChange={setUrl}
+      />
       {error && <Form.Description title="Error" text={error} />}
       {info && (
         <>
           <Form.Description title="Video" text={`${info.title}\n${info.channel}`} />
           <Form.Separator />
-          <Form.TextField id="artist" title="Artist" {...field("artist")} />
-          <Form.TextField id="title" title="Title" {...field("title")} />
-          <Form.TextField id="album" title="Album" {...field("album")} />
-          <Form.TextField id="year" title="Year" {...field("year")} />
-          <Form.TextArea id="comment" title="Comment" {...field("comment")} />
+          <Form.TextField id="artist" title="Artist" placeholder="Artist name" {...field("artist")} />
+          <Form.TextField
+            id="albumArtist"
+            title="Album Artist"
+            placeholder={tags.artist ? `Same as Artist: ${tags.artist}` : "Same as Artist"}
+            info="Leave blank to use the Artist. Artist folders are named after this."
+            {...field("albumArtist")}
+          />
+          <Form.TextField id="title" title="Title" placeholder="Song title" {...field("title")} />
+          <Form.TextField id="album" title="Album" placeholder="Album name" {...field("album")} />
+          <Form.TextField id="year" title="Year" placeholder="YYYY" {...field("year")} />
+          <Form.TextArea id="comment" title="Comment" placeholder="Notes saved in the file" {...field("comment")} />
           <Form.Separator />
           <Form.Dropdown
             id="layout"

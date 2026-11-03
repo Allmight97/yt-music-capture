@@ -12,6 +12,7 @@ export type VideoInfo = {
 
 export type SongTags = {
   artist: string;
+  albumArtist: string;
   title: string;
   album: string;
   year: string;
@@ -23,7 +24,10 @@ const NOISE =
 const SEPARATOR = /\s+[-–—|]\s+/;
 
 export function cleanTitle(raw: string): string {
-  return raw.replace(NOISE, "").replace(/\s{2,}/g, " ").trim();
+  return raw
+    .replace(NOISE, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 export function channelArtist(channel: string): string {
@@ -53,16 +57,32 @@ export function suggestTags(info: VideoInfo, album: string, capturedOn: string):
   const year = info.uploadDate.slice(0, 4);
   const comment = sourceComment(info, capturedOn);
   if (info.artist && info.track) {
-    return { artist: info.artist, title: info.track, album, year, comment };
+    return { artist: info.artist, albumArtist: "", title: info.track, album, year, comment };
   }
   const cleaned = cleanTitle(info.title);
   const parts = cleaned.split(SEPARATOR);
   if (parts.length >= 2) {
-    return { artist: parts[0].trim(), title: parts.slice(1).join(" - ").trim(), album, year, comment };
+    return {
+      artist: parts[0].trim(),
+      albumArtist: "",
+      title: parts.slice(1).join(" - ").trim(),
+      album,
+      year,
+      comment,
+    };
   }
-  return { artist: channelArtist(info.channel), title: cleaned, album, year, comment };
+  return { artist: channelArtist(info.channel), albumArtist: "", title: cleaned, album, year, comment };
 }
 
 export function safeFileName(name: string): string {
-  return name.replace(/[/:\\]/g, "-").replace(/^\.+/, "").trim() || "Untitled";
+  return (
+    name
+      .replace(/[/:\\]/g, "-")
+      .replace(/^\.+/, "")
+      .trim() || "Untitled"
+  );
+}
+
+export function folderArtist(tags: SongTags): string {
+  return tags.albumArtist.trim() || tags.artist;
 }
