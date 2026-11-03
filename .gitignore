@@ -1,0 +1,3 @@
+node_modules/
+build/
+raycast-env.d.ts
