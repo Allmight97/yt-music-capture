@@ -23,7 +23,10 @@ const NOISE =
 const SEPARATOR = /\s+[-–—|]\s+/;
 
 export function cleanTitle(raw: string): string {
-  return raw.replace(NOISE, "").replace(/\s{2,}/g, " ").trim();
+  return raw
+    .replace(NOISE, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 export function channelArtist(channel: string): string {
@@ -64,5 +67,10 @@ export function suggestTags(info: VideoInfo, album: string, capturedOn: string):
 }
 
 export function safeFileName(name: string): string {
-  return name.replace(/[/:\\]/g, "-").replace(/^\.+/, "").trim() || "Untitled";
+  return (
+    name
+      .replace(/[/:\\]/g, "-")
+      .replace(/^\.+/, "")
+      .trim() || "Untitled"
+  );
 }
