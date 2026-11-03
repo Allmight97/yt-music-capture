@@ -34,6 +34,16 @@ capture finishes even after the TinyCast window closes.
   (checked 2026-11-02). The link carries no input, so TinyCast does not ask before running it; Raycast
   asks to confirm every deeplink launch. Never add `launchType=background`: TinyCast shows no HUD for a
   background run.
+- **The download reuses the form's YouTube lookup.** `probe` saves yt-dlp's full info JSON to
+  `~/Library/Caches/yt-music-capture/probe-<id>.info.json`; `run` downloads with `--load-info-json`
+  and skips re-extraction (a 3-minute song went from about 3 s to 0.8 s end to end, and it saves a
+  Node run that peaks near 330 MB). YouTube's signed URLs expire, so a failed or missing file falls
+  back to a fresh download from the URL. `run` deletes the file; `probe` deletes any older than
+  6 hours, so abandoned forms leave nothing for long.
+- **Untrusted text never becomes code.** Values reach tools as separate arguments, the URL after
+  `--`, and the share URL reaches AppleScript through `argv`, never by string splicing.
+- **`~` in a library or chosen folder is expanded** in `songPath`: TinyCast passes a directory
+  setting's `~/Music` default through literally.
 - **The worker starts with `zsh -f`** and appends Homebrew and `~/.local/bin` to `PATH`. Startup files
   must not change which tools it finds, and a GUI app has no shell `PATH`.
 - **IPv4 is automatic.** Every yt-dlp call that fails is retried once with `--force-ipv4`. YouTube's

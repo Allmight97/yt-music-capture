@@ -3,6 +3,7 @@ set -euo pipefail
 export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 ytdlp_common=(--no-playlist --no-warnings --js-runtimes node)
+cache=$HOME/Library/Caches/yt-music-capture
 
 ytdlp() {
   local err
@@ -28,7 +29,10 @@ report() {
 
 probe() {
   use_cookies "${2:-}"
-  ytdlp -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description})j' "$1"
+  mkdir -p "$cache"
+  find "$cache" -name 'probe-*.info.json' -mmin +360 -delete
+  ytdlp --skip-download --no-simulate --write-info-json -o "$cache/probe-%(id)s" \
+    -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description})j' -- "$1"
 }
 
 run() {
@@ -36,17 +40,21 @@ run() {
   url=$(field url) artist=$(field artist) album_artist=$(field albumArtist) title=$(field title) album=$(field album)
   year=$(field year) comment=$(field comment) description=$(field description) grouping=$(field grouping)
   destination=$(field destination) share=$(field share) volume=$(field volume)
-  add_to_music=$(field addToMusic) done_link=$(field doneLink)
+  add_to_music=$(field addToMusic) done_link=$(field doneLink) info_json=$(field infoJson)
   use_cookies "$(field cookies)"
 
   if [[ -n $share && $destination == $volume/* ]]; then
-    [[ -d $volume ]] || osascript -e "mount volume \"$share\"" >/dev/null
+    [[ -d $volume ]] || osascript -e 'on run argv' -e 'mount volume (item 1 of argv)' -e 'end run' "$share" >/dev/null
     [[ -d $volume ]] || { print "Network share did not mount at $volume"; exit 1; }
   fi
   [[ ! -e $destination ]] || { print "Already exists: $destination"; exit 1; }
 
-  ytdlp -f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail --convert-thumbnails jpg \
-    --newline -o "$work/source.%(ext)s" "$url"
+  local fetch=(-f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail --convert-thumbnails jpg
+    --newline -o "$work/source.%(ext)s")
+  if ! [[ -f $info_json ]] || ! yt-dlp "${ytdlp_common[@]}" --load-info-json "$info_json" "${fetch[@]}"; then
+    ytdlp "${fetch[@]}" -- "$url"
+  fi
+  rm -f "$info_json"
 
   local s=1400
   ffmpeg -v error -y -i "$work/source.jpg" -frames:v 1 -q:v 2 -filter_complex \

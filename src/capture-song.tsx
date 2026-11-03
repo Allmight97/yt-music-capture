@@ -12,10 +12,11 @@ import {
   showToast,
   Toast,
 } from "@raycast/api";
+import { join } from "node:path";
 import { useEffect, useState } from "react";
 import { Layout, LAYOUTS, networkShares, songPath, volumeOf } from "./destination";
 import { SongTags, suggestTags, VideoInfo } from "./tags";
-import { doneLink, mountTable, probe, startCapture } from "./worker";
+import { doneLink, jobsFolder, mountTable, probe, startCapture } from "./worker";
 
 type Preferences = {
   musicLibrary: string;
@@ -123,6 +124,7 @@ export default function Command() {
         addToMusic: preferences.addToMusic,
         cookies: preferences.cookiesFromBrowser,
         grouping: preferences.grouping.trim(),
+        infoJson: join(jobsFolder, `probe-${info.id}.info.json`),
         doneLink: doneLink(),
       });
       await LocalStorage.setItem(

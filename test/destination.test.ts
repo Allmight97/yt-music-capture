@@ -1,4 +1,6 @@
 import { test } from "node:test";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import assert from "node:assert/strict";
 import manifest from "../package.json";
 import { LAYOUTS, networkShares, songPath, volumeOf } from "../src/destination";
@@ -45,4 +47,10 @@ test("network shares are read from the mount table", () => {
     "/Volumes/DATA": "smb://me@nas.local/DATA",
     "/Volumes/My Media": "afp://me@old.local/Media",
   });
+});
+
+test("a library or folder given as ~/… resolves to the home folder", () => {
+  const home = { library: "~/Music", captureFolder: "!YT Captures", customFolder: "~/Desktop" };
+  assert.equal(songPath("artist", tags, home), join(homedir(), "Music", "AC-DC", "Thunderstruck.m4a"));
+  assert.equal(songPath("custom", tags, home), join(homedir(), "Desktop", "AC-DC - Thunderstruck.m4a"));
 });

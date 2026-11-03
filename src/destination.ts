@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { folderArtist, safeFileName, SongTags } from "./tags";
 
@@ -17,6 +18,10 @@ export type Places = {
   customFolder?: string;
 };
 
+function expandHome(path: string): string {
+  return path === "~" || path.startsWith("~/") ? join(homedir(), path.slice(1)) : path;
+}
+
 export function volumeOf(path: string): string {
   const match = path.match(/^\/Volumes\/[^/]+/);
   return match ? match[0] : "";
@@ -32,21 +37,22 @@ export function networkShares(mountTable: string): Record<string, string> {
 }
 
 export function songPath(layout: Layout, tags: SongTags, places: Places): string {
+  const library = expandHome(places.library);
   const artist = safeFileName(folderArtist(tags));
   const title = `${safeFileName(tags.title)}.m4a`;
   const flat = `${safeFileName(`${tags.artist} - ${tags.title}`)}.m4a`;
-  const captures = join(places.library, places.captureFolder);
+  const captures = join(library, places.captureFolder);
   switch (layout) {
     case "captures":
       return join(captures, flat);
     case "captures-by-artist":
       return join(captures, artist, title);
     case "artist":
-      return join(places.library, artist, title);
+      return join(library, artist, title);
     case "artist-album":
-      return join(places.library, artist, safeFileName(tags.album), title);
+      return join(library, artist, safeFileName(tags.album), title);
     case "custom":
       if (!places.customFolder) throw new Error("Choose a folder first");
-      return join(places.customFolder, flat);
+      return join(expandHome(places.customFolder), flat);
   }
 }
