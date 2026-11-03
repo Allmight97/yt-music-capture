@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- A missing Apple Music folder fails the capture before anything is downloaded or saved. If the
+  Music copy fails after the library copy, the result says the song was saved and names the file.
+
 ### Changed
 
 - The comment credits the source concisely: channel and `youtu.be` link, the artwork credit, and a

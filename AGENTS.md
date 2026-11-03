@@ -29,7 +29,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
   `startCapture` launches the worker through `perl` `fork` + `setsid`, so it survives a kill of
   TinyCast's process group.
 - Success deletes the job file and log; failure keeps both for `zsh -f assets/capture.zsh run
-  <job.json>`.
+  <job.json>`. A failed Apple Music copy after the library copy exits `SAVED_ONLY` and deletes the
+  job, because a rerun would stop at the existing file; its result names the file to add by hand.
+  `run` checks every destination before it downloads, so the usual failures leave nothing behind.
 - Results come back as a HUD, never `osascript display notification`: that posts as Script Editor,
   and clicking it opens Script Editor. The worker writes a `.result` beside the job and opens the
   job's `doneLink`; `show-capture-results` shows and deletes every waiting result.
