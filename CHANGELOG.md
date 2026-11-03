@@ -8,6 +8,8 @@
 
 ### Changed
 
+- A bar (`|`) in a video title no longer splits artist from title, so "Serene | Beautiful Ambient
+  Mix" is filed under the channel with its whole title.
 - The comment credits the source concisely: channel and `youtu.be` link, the artwork credit, and a
   mix's tracklist from the video's chapters. Upload and capture dates are gone; Year and Date Added
   already hold them.

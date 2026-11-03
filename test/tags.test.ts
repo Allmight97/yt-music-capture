@@ -36,6 +36,13 @@ test("splits 'Artist - Title' and drops video noise", () => {
   assert.equal(tags.album, "");
 });
 
+test("a bar is not an artist separator, so a mix keeps its whole title under the channel", () => {
+  const mix = suggestTags({ ...base, title: "Serene | Beautiful Ambient Mix", channel: "ChilloutDeer" }, "{year} Mixes");
+  assert.deepEqual([mix.artist, mix.title], ["ChilloutDeer", "Serene | Beautiful Ambient Mix"]);
+  const set = suggestTags({ ...base, title: "Tycho - Live at Cercle | Full Set", channel: "Cercle" }, "{year} Mixes");
+  assert.deepEqual([set.artist, set.title], ["Tycho", "Live at Cercle | Full Set"]);
+});
+
 test("keeps meaningful brackets such as features and remixes", () => {
   assert.equal(cleanTitle("A - B (feat. C) [Official Music Video]"), "A - B (feat. C)");
   assert.equal(cleanTitle("A - B (Extended Mix)"), "A - B (Extended Mix)");

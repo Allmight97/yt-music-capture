@@ -74,6 +74,9 @@ finishes after the window closes. Raycast Store submission is open work in issue
 - Album, in order (`suggestAlbum`): YouTube's own, else the Mix Album template for videos of
   `MIX_MINUTES` or more (`{year}` = upload year), else blank. The owner files long mixes as
   "YYYY Mixes" and singles with no album.
+- Artist and title: YouTube's own fields, else a split on a spaced dash, else the channel and the
+  whole title. A bar (`|`) never splits: mix channels title videos "Name | Descriptor", and the
+  owner files those under the channel with the whole title.
 - `albumArtistOf` (album artist, else artist) names artist folders and the album-artist tag, so a
   remix can file under the remixer.
 

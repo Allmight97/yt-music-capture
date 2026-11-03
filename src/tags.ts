@@ -60,7 +60,7 @@ export function videoInfoOf(json: ProbeJson, url: string): VideoInfo {
 
 const NOISE =
   /\s*[([](?:[^)\]]*\b(?:official|video|audio|lyrics?|visuali[sz]er|remaster(?:ed)?|hd|hq|4k|mv|m\/v|clip)\b[^)\]]*)[)\]]/gi;
-const SEPARATOR = /\s+[-–—|]\s+/;
+const SEPARATOR = /\s+[-–—]\s+/;
 
 export function cleanTitle(raw: string): string {
   return raw
