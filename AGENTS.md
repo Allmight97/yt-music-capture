@@ -73,8 +73,11 @@ Run scripts with Bun or npm (`bun run build` and `npm run build` are equivalent)
 dependencies only with npm: the Raycast Store builds with npm and requires `package-lock.json`, so
 it is the only lockfile. `.gitignore` drops `bun.lock`.
 
-`npm run lint` (`ray lint`: manifest, icon, ESLint, Prettier), `npm run build` (writes `build/`) and
-`npm test` must pass. Keep `-o build` in the build script: without it `ray build` writes into
+`npm run check` is the one gate, locally and in CI (`.github/workflows/check.yml`, macOS because the
+worker is zsh, `perl` and `plutil`). It stops at the first failure: `ray lint` (manifest, icon,
+ESLint, Prettier), `tsc --noEmit`, `zsh -n` on the worker, `npm test`, then `npm run build` (writes
+`build/`). Lint stays ESLint and Prettier because the Raycast Store runs `ray lint` on every
+submission; a second linter such as Oxlint would only duplicate it. Keep `-o build` in the build script: without it `ray build` writes into
 `~/.config/raycast/extensions/`. TinyCast's Install from GitHub ignores the script and runs
 `ray build -e dist -o <dir>` itself after `<package manager> install --ignore-scripts`.
 

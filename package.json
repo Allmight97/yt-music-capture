@@ -152,6 +152,7 @@
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
     "publish": "ray publish",
-    "test": "node --import tsx --test test/*.test.ts"
+    "test": "node --import tsx --test test/*.test.ts",
+    "check": "ray lint && tsc --noEmit && zsh -n assets/capture.zsh && npm test && npm run build"
   }
 }

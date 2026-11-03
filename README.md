@@ -54,7 +54,7 @@ TinyCast: Settings → Extensions → Install New → Add from folder → the `b
 
 ## Develop
 
-- `npm test` runs the tag and folder-layout tests; `npm run lint` runs Raycast's lint.
+- `npm run check` runs everything CI runs: lint, type check, worker syntax, tests, build.
 - `zsh -f assets/capture.zsh probe <url>` prints what the form will see.
 - A failed capture leaves its job file in `~/Library/Caches/yt-music-capture/`; rerun it with
   `zsh -f assets/capture.zsh run <job.json>`.
