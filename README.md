@@ -26,17 +26,29 @@ brew install yt-dlp ffmpeg atomicparsley node
 
 ## Install
 
+### TinyCast
+
+Settings → Extensions → Install New → **Install from GitHub** → enter:
+
+```
+Allmight97/yt-music-capture
+```
+
+TinyCast needs Node and a package manager (pnpm, Bun, Yarn or npm) to build it. Then set the NAS
+share and music folder in the extension's settings. To update, install it again.
+
+### From source
+
 ```sh
 npm install
 npm run build
 ```
 
 TinyCast: Settings → Extensions → Install New → Add from folder → the `build` folder.
-Then set the NAS share and music folder in the extension's settings.
 
 ## Develop
 
-- `npm test` runs the tag and folder-layout tests.
+- `npm test` runs the tag and folder-layout tests; `npm run lint` runs Raycast's lint.
 - `zsh -f assets/capture.zsh probe <url>` prints what the form will see.
 - A failed capture leaves its job file in `~/Library/Caches/yt-music-capture/`; rerun it with
   `zsh -f assets/capture.zsh run <job.json>`.

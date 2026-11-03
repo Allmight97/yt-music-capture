@@ -19,12 +19,17 @@ capture finishes even after the TinyCast window closes.
   closes. `startCapture` launches the worker through `perl` with `fork` + `setsid`, so it is in its
   own session and survives even a kill of TinyCast's process group. On success it deletes its job
   file and log; on failure it keeps both, and `zsh -f assets/capture.zsh run <job.json>` retries it.
-- **Results show as a TinyCast HUD, never a macOS notification.** `osascript display notification`
+- **Results show as a HUD, never a macOS notification.** `osascript display notification`
   posts as Script Editor, and clicking it opened Script Editor and its Open dialog. The worker writes
-  a `.result` file beside the job and opens the `show-capture-results` deeplink with `open -g`;
-  that no-view command shows every waiting result and deletes it. The link carries no input, so
-  TinyCast does not ask before running it. Never add `launchType=background`: TinyCast shows no HUD
-  for a background run.
+  a `.result` file beside the job and opens the job's `doneLink` with `open -g`; the
+  `show-capture-results` no-view command shows every waiting result and deletes it. `doneLink()` in
+  `src/worker.ts` picks the scheme at runtime: `tinycast://` when `environment.supportPath` is inside
+  TinyCast's folder, else `raycast://`. TinyCast also answers `raycast://`, but an installed Raycast
+  can win that scheme. TinyCast leaves `environment.ownerOrAuthorName` unset, so its link reads
+  `extensions/undefined/...`; TinyCast treats the owner as a hint and matches the bare extension name
+  (checked 2026-11-02). The link carries no input, so TinyCast does not ask before running it; Raycast
+  asks to confirm every deeplink launch. Never add `launchType=background`: TinyCast shows no HUD for a
+  background run.
 - **The worker starts with `zsh -f`** and appends Homebrew and `~/.local/bin` to `PATH`. Startup files
   must not change which tools it finds, and a GUI app has no shell `PATH`.
 - **IPv4 is automatic.** Every yt-dlp call that fails is retried once with `--force-ipv4`. YouTube's
@@ -46,7 +51,12 @@ capture finishes even after the TinyCast window closes.
 - **NAS before Apple Music.** The optional Apple Music step (off by default) copies into Music's
   "Automatically Add to Music" folder, which moves files in.
 
-## Install
+## Install and checks
 
-`npm run build` writes `build/`. In TinyCast: Settings → Extensions → Install New → Add from folder →
-`build/`. Re-run both after a change.
+`npm run lint` (`ray lint`: manifest, icon, ESLint, Prettier), `npm run build` (writes `build/`) and
+`npm test` must pass. Keep `-o build` in the build script: without it `ray build` writes into
+`~/.config/raycast/extensions/`. TinyCast's Install from GitHub ignores the script and runs
+`ray build -e dist -o <dir>` itself after `<package manager> install --ignore-scripts`.
+
+To try a local change in TinyCast: `npm run build`, then Settings → Extensions → Install New → Add
+from folder → `build/`.
