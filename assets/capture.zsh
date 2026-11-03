@@ -2,19 +2,21 @@
 set -euo pipefail
 export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-ytdlp_common=(--no-playlist --no-warnings --js-runtimes node)
+ytdlp_common=(--no-playlist --no-warnings --js-runtimes node --extractor-args youtube:skip=hls)
 cache=$HOME/Library/Caches/yt-music-capture
 
 ytdlp() {
   local err
   err=$(mktemp)
-  if yt-dlp "${ytdlp_common[@]}" "$@" 2>"$err"; then
+  yt-dlp "${ytdlp_common[@]}" "$@" 2>"$err" &
+  if wait $!; then
     rm -f "$err"
     return 0
   fi
   print -u2 "yt-dlp failed, retrying over IPv4: $(tail -n 3 "$err")"
   rm -f "$err"
-  yt-dlp "${ytdlp_common[@]}" --force-ipv4 "$@"
+  yt-dlp "${ytdlp_common[@]}" --force-ipv4 "$@" &
+  wait $!
 }
 
 use_cookies() {
@@ -28,6 +30,7 @@ report() {
 }
 
 probe() {
+  trap 'pkill -TERM -P $$; exit 143' TERM
   use_cookies "${2:-}"
   mkdir -p "$cache"
   find "$cache" -name 'probe-*.info.json' -mmin +360 -delete
@@ -49,7 +52,7 @@ run() {
   fi
   [[ ! -e $destination ]] || { print "Already exists: $destination"; exit 1; }
 
-  local fetch=(-f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail --convert-thumbnails jpg
+  local fetch=(-f 'ba[ext=m4a]/ba' -x --audio-format m4a --write-thumbnail
     --no-progress -o "$work/source.%(ext)s")
   if ! [[ -f $info_json ]] || ! yt-dlp "${ytdlp_common[@]}" --load-info-json "$info_json" "${fetch[@]}"; then
     ytdlp "${fetch[@]}" -- "$url"
@@ -57,7 +60,9 @@ run() {
   rm -f "$info_json"
 
   local s=1400
-  ffmpeg -v error -y -i "$work/source.jpg" -frames:v 1 -q:v 2 -filter_complex \
+  local thumbnail=( "$work"/source.(webp|jpg|jpeg|png)(N) )
+  (( ${#thumbnail} )) || { print "yt-dlp wrote no thumbnail"; exit 1; }
+  ffmpeg -v error -y -i "$thumbnail[1]" -frames:v 1 -q:v 2 -filter_complex \
     "[0]split[bg][fg];[bg]scale=$s:$s:force_original_aspect_ratio=increase,crop=$s:$s,boxblur=40,eq=brightness=-0.15[blur];[fg]scale=$s:$s:force_original_aspect_ratio=decrease[front];[blur][front]overlay=(W-w)/2:(H-h)/2" \
     "$work/cover.jpg"
 

@@ -30,9 +30,10 @@ export function mountTable(): Promise<string> {
   return new Promise((resolve) => execFile("/sbin/mount", (error, stdout) => resolve(error ? "" : String(stdout))));
 }
 
-export function probe(url: string, cookies: string): Promise<VideoInfo> {
-  return new Promise((resolve, reject) => {
-    execFile(
+export function probe(url: string, cookies: string): { result: Promise<VideoInfo>; stop: () => void } {
+  let child: ReturnType<typeof execFile> | undefined;
+  const result = new Promise<VideoInfo>((resolve, reject) => {
+    child = execFile(
       "/bin/zsh",
       ["-f", script(), "probe", url, cookies],
       { maxBuffer: 16 * 1024 * 1024 },
@@ -55,6 +56,7 @@ export function probe(url: string, cookies: string): Promise<VideoInfo> {
       },
     );
   });
+  return { result, stop: () => child?.kill() };
 }
 
 export function startCapture(job: Job): Promise<void> {

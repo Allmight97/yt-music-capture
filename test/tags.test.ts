@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { channelArtist, cleanTitle, safeFileName, suggestAlbum, suggestTags, VideoInfo } from "../src/tags";
+import { channelArtist, cleanTitle, safeFileName, suggestAlbum, suggestTags, videoIdOf, VideoInfo } from "../src/tags";
 
 const base: VideoInfo = {
   id: "x",
@@ -62,4 +62,26 @@ test("album: YouTube's own album first, then the mix template for long videos, e
   assert.equal(suggestAlbum({ ...base, album: "Random Access Memories", durationSeconds: 3700 }, "{year} Mixes"), "Random Access Memories");
   assert.equal(suggestAlbum({ ...base, uploadDate: "20200314", durationSeconds: 20 * 60 }, "{year} Mixes"), "2020 Mixes");
   assert.equal(suggestAlbum({ ...base, durationSeconds: 20 * 60 - 1 }, "{year} Mixes"), "");
+});
+
+test("every YouTube link shape for one video gives the same id, so edits don't look it up again", () => {
+  const id = "dQw4w9WgXcQ";
+  for (const link of [
+    `https://www.youtube.com/watch?v=${id}`,
+    `https://www.youtube.com/watch?v=${id}&t=42s&list=PL123`,
+    `https://m.youtube.com/watch?feature=share&v=${id}`,
+    `https://music.youtube.com/watch?v=${id}&si=abc`,
+    `https://youtu.be/${id}?t=10`,
+    `https://www.youtube.com/shorts/${id}`,
+    `https://www.youtube.com/live/${id}`,
+    `  https://youtube.com/embed/${id}  `,
+  ]) {
+    assert.equal(videoIdOf(link), id, link);
+  }
+});
+
+test("text that is not a YouTube video link has no id", () => {
+  for (const text of ["", "hello", "https://vimeo.com/123", "https://www.youtube.com/@channel", "https://youtu.be/short"]) {
+    assert.equal(videoIdOf(text), undefined, text);
+  }
 });

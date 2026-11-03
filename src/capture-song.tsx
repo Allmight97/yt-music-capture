@@ -14,7 +14,7 @@ import {
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { Layout, LAYOUTS, networkShares, songPath, volumeOf } from "./destination";
-import { albumArtistOf, SongTags, suggestTags, VideoInfo } from "./tags";
+import { albumArtistOf, SongTags, suggestTags, videoIdOf, VideoInfo, watchUrl } from "./tags";
 import { doneLink, mountTable, probe, startCapture } from "./worker";
 
 type Preferences = {
@@ -27,7 +27,7 @@ type Preferences = {
   cookiesFromBrowser: string;
 };
 
-const YOUTUBE_URL = /^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)\/\S+$/i;
+const LOOKUP_DELAY_MS = 500;
 
 type Remembered = { layout: Layout; customFolder?: string };
 
@@ -53,9 +53,9 @@ function today(): string {
 
 async function initialUrl(): Promise<string> {
   const selected = await getSelectedText().catch(() => "");
-  if (YOUTUBE_URL.test(selected.trim())) return selected.trim();
+  if (videoIdOf(selected)) return selected.trim();
   const clipboard = (await Clipboard.readText()) ?? "";
-  return YOUTUBE_URL.test(clipboard.trim()) ? clipboard.trim() : "";
+  return videoIdOf(clipboard) ? clipboard.trim() : "";
 }
 
 export default function Command() {
@@ -82,25 +82,34 @@ export default function Command() {
   }, []);
 
   useEffect(() => {
+    const id = videoIdOf(url);
+    if (id && id === info?.id) return;
     setInfo(undefined);
     setError(undefined);
-    if (!YOUTUBE_URL.test(url.trim())) return;
+    if (!id) return;
     let cancelled = false;
-    setIsLoading(true);
-    probe(url.trim(), preferences.cookiesFromBrowser)
-      .then(async (found) => {
-        const remembered = await recall(found);
-        if (cancelled) return;
-        setInfo(found);
-        setTags(suggestTags(found, preferences.mixAlbum, today()));
-        setLayout(remembered?.layout ?? preferences.layout);
-        setCustomFolder(remembered?.customFolder ? [remembered.customFolder] : []);
-        setIsRemembered(Boolean(remembered));
-      })
-      .catch((e: Error) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setIsLoading(false));
+    let lookup: ReturnType<typeof probe> | undefined;
+    const timer = setTimeout(() => {
+      setIsLoading(true);
+      lookup = probe(watchUrl(id), preferences.cookiesFromBrowser);
+      lookup.result
+        .then(async (found) => {
+          const remembered = await recall(found);
+          if (cancelled) return;
+          setInfo(found);
+          setTags(suggestTags(found, preferences.mixAlbum, today()));
+          setLayout(remembered?.layout ?? preferences.layout);
+          setCustomFolder(remembered?.customFolder ? [remembered.customFolder] : []);
+          setIsRemembered(Boolean(remembered));
+        })
+        .catch((e: Error) => !cancelled && setError(e.message))
+        .finally(() => !cancelled && setIsLoading(false));
+    }, LOOKUP_DELAY_MS);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
+      lookup?.stop();
+      setIsLoading(false);
     };
   }, [url]);
 

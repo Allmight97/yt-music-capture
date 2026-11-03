@@ -40,6 +40,16 @@ capture finishes even after the TinyCast window closes.
   Node run that peaks near 330 MB). YouTube's signed URLs expire, so a failed or missing file falls
   back to a fresh download from the URL. `run` deletes the file; `probe` deletes any older than
   6 hours, so abandoned forms leave nothing for long.
+- **YouTube sees only essential requests.** The form looks up a video 500 ms after typing stops,
+  stops a lookup it no longer needs, and skips the lookup when an edited link names the same video
+  (`videoIdOf`); it always probes the clean `watch?v=<id>` link. yt-dlp skips the HLS manifest
+  (`youtube:skip=hls`; the AAC download is a plain file), so a lookup is three requests: watch
+  page, player API, player JavaScript. Don't force a player client: yt-dlp's default tracks YouTube.
+- **`ytdlp()` runs yt-dlp in the background and `wait`s.** zsh defers a trap until a foreground
+  child exits, so a stopped lookup would keep running; `wait` returns on the signal, and `probe`'s
+  `TERM` trap kills its children.
+- **The thumbnail reaches ffmpeg as YouTube serves it** (usually WebP). Converting it to JPEG first
+  cost one extra lossy encode before the cover's own.
 - **Untrusted text never becomes code.** Values reach tools as separate arguments, the URL after
   `--`, and the share URL reaches AppleScript through `argv`, never by string splicing.
 - **`~` in a library or chosen folder is expanded** in `songPath`: TinyCast passes a directory

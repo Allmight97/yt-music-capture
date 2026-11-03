@@ -97,3 +97,30 @@ export function safeFileName(name: string): string {
 export function albumArtistOf(tags: SongTags): string {
   return tags.albumArtist.trim() || tags.artist;
 }
+
+const VIDEO_ID = /^[\w-]{11}$/;
+const YOUTUBE_HOSTS = new Set(["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"]);
+
+export function videoIdOf(text: string): string | undefined {
+  let url: URL;
+  try {
+    url = new URL(text.trim());
+  } catch {
+    return undefined;
+  }
+  if (!YOUTUBE_HOSTS.has(url.hostname)) return undefined;
+  const [first, second] = url.pathname.split("/").filter(Boolean);
+  const id =
+    url.hostname === "youtu.be"
+      ? first
+      : first === "watch"
+        ? url.searchParams.get("v")
+        : ["shorts", "live", "embed"].includes(first)
+          ? second
+          : undefined;
+  return id && VIDEO_ID.test(id) ? id : undefined;
+}
+
+export function watchUrl(id: string): string {
+  return `https://www.youtube.com/watch?v=${id}`;
+}
