@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileComment, suggestTags, videoIdOf, videoInfoOf, watchUrl } from "../src/tags";
+import { fileComment, MIX_MINUTES, suggestTags, videoIdOf, videoInfoOf, watchUrl } from "../src/tags";
 
 type Tags = { comment?: string; lyrics?: string; SOURCE_URL?: string };
 type Change = { file: string; url: string; comment: string; tracklist: string; was: Tags };
@@ -24,7 +24,7 @@ function tagsOf(file: string): Tags {
 
 function lookUp(id: string) {
   try {
-    return JSON.parse(execFileSync("/bin/zsh", ["-f", worker, "probe", watchUrl(id)], { encoding: "utf8" }));
+    return JSON.parse(execFileSync("/bin/zsh", ["-f", worker, "probe", watchUrl(id), "", String(MIX_MINUTES * 60)], { encoding: "utf8" }));
   } catch {
     return undefined;
   }

@@ -6,17 +6,18 @@ finishes after the window closes. Raycast Store submission is open work in issue
 
 ## Map
 
-- `assets/capture.zsh`: the worker. `probe <url> [cookies]` prints the form's metadata as JSON and
-  saves yt-dlp's full lookup; `run <job.json>` does the capture; `retag <file> <comment>
-  <tracklist> <url>` rewrites a song's comment and Lyrics. Both use `credit`. It owns every call
-  to yt-dlp, ffmpeg, AtomicParsley, the share mount and the library copy. Run it from a terminal
-  to debug.
+- `assets/capture.zsh`: the worker. `probe <url> [cookies] [mix-seconds]` prints the form's
+  metadata as JSON and saves yt-dlp's full lookup; `run <job.json>` does the capture; `retag
+  <file> <comment> <tracklist> <url>` rewrites a song's comment and Lyrics. Both use `credit`. It
+  owns every call to yt-dlp, ffmpeg, AtomicParsley, the share mount and the library copy. Run it
+  from a terminal to debug.
 - `src/worker.ts`: the extension's only link to the worker: `probe`, the job file in
   `~/Library/Caches/yt-music-capture/`, the detached launch, and the done link.
 - `src/tags.ts`, `src/destination.ts`: pure rules for tags, album, video ids and save paths. Tested.
 - `scripts/retag.ts`: brings songs captured by older versions up to the current comment and Lyrics.
   `plan <folder> <plan.json>` looks each `SOURCE_URL` up once and prints each song's current and
-  new values, so hand edits are seen before `apply <plan.json>` writes them. Same rules as a capture: `tags.ts` and the worker's `credit`.
+  new values, so hand edits are seen before `apply <plan.json>` writes them. Same rules as a
+  capture: `tags.ts` and the worker's `credit`.
 - `src/capture-song.tsx`: the form. `src/show-capture-results.ts`: shows finished captures.
 
 ## Rules and why
@@ -49,6 +50,10 @@ finishes after the window closes. Raycast Store submission is open work in issue
 - `run` downloads from the lookup `probe` saved (`--load-info-json`), so YouTube is asked once per
   capture. Its signed URLs expire: a missing or failed file falls back to a fresh download. `run`
   deletes the file; `probe` deletes any older than 6 hours.
+- A mix (`MIX_MINUTES` or more, passed to `probe` as seconds) with no chapters gets a second
+  lookup with `--write-comments` (top 50, no replies): one more watch-page and player fetch plus a
+  few comment pages, only for those videos, because the comments are where its tracklist may be.
+  The first lookup cannot ask for comments conditionally, and a saved lookup cannot fetch them.
 - yt-dlp skips the HLS manifest (`youtube:skip=hls`). Don't force a player client; yt-dlp's default
   tracks YouTube.
 - A failed yt-dlp call is retried once with `--force-ipv4`; YouTube's bot checks and 403s are common
@@ -64,9 +69,13 @@ finishes after the window closes. Raycast Store submission is open work in issue
   AtomicParsley adds only `----:com.apple.iTunes:SOURCE_URL`, which ffmpeg cannot write. Keep text
   tags out of AtomicParsley: it cuts them at 255 characters, and a tracklist comment is longer.
   Never use yt-dlp `--parse-metadata`: it splits on `:` and breaks URLs.
-- Comment (`fileComment`): channel and `youtu.be` link, the art credit, then the tracklist from
-  yt-dlp's `chapters`. It credits the uploader and the artists in a mix. Never derive a tracklist
-  from description text: no chapters means no tracklist (owner's choice). The tracklist also goes
+- Comment (`fileComment`): channel and `youtu.be` link, the art credit, then the tracklist. It
+  credits the uploader and the artists in a mix.
+- Tracklist source, in order (`videoInfoOf`): yt-dlp's `chapters`; else the first comment by the
+  uploader (`author_is_uploader`, pinned or not) with two or more timestamp lines; else none.
+  Older uploads (Pulse8's) carry their tracklist only in such a comment. Never fan comments, never
+  description text: YouTube already turns well-formed description timestamps into chapters, and
+  the owner will not guess a tracklist the uploader did not write. The tracklist also goes
   to Lyrics (`©lyr`): the iPhone shows no comments, and its Lyrics button is the place to read it.
   The owner's device test (2026-11-03) shows Lyrics for these songs on Mac and iPhone, although
   Apple's support page says the button is grayed out for non-catalog songs. Don't add chapter

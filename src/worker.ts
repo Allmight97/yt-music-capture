@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { SongTags, VideoInfo, videoInfoOf } from "./tags";
+import { MIX_MINUTES, SongTags, VideoInfo, videoInfoOf } from "./tags";
 
 export type Job = SongTags & {
   url: string;
@@ -34,7 +34,7 @@ export function probe(url: string, cookies: string): { result: Promise<VideoInfo
   const result = new Promise<VideoInfo>((resolve, reject) => {
     child = execFile(
       "/bin/zsh",
-      ["-f", script(), "probe", url, cookies],
+      ["-f", script(), "probe", url, cookies, String(MIX_MINUTES * 60)],
       { maxBuffer: 16 * 1024 * 1024 },
       (error, stdout, stderr) => {
         if (error) return reject(new Error(String(stderr).trim().split("\n").pop() || error.message));

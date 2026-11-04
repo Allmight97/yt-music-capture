@@ -45,12 +45,24 @@ report() {
 }
 
 probe() {
-  trap 'pkill -TERM -P $$; exit 143' TERM
+  trap 'pkill -TERM -P $$; rm -f "$found"; exit 143' TERM
+  local url=$1 mix_seconds=${3:-0} found
+  local fields=id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description,chapters
   use_cookies "${2:-}"
   mkdir -p "$cache"
   find "$cache" -name 'probe-*.info.json' -mmin +360 -delete
+  found=$(mktemp)
   ytdlp --skip-download --no-simulate --write-info-json -o "$cache/probe-%(id)s" \
-    -O '%(.{id,title,channel,channel_url,upload_date,webpage_url,artist,track,album,duration,description,chapters})j' -- "$1"
+    -O '%(duration|0)d %(chapters&1|0)s' -O "%(.{$fields})j" -- "$url" >"$found"
+  local duration has_chapters
+  read -r duration has_chapters <"$found"
+  if (( mix_seconds && duration >= mix_seconds )) && [[ $has_chapters == 0 ]]; then
+    ytdlp --skip-download --no-simulate --write-info-json --write-comments -o "$cache/probe-%(id)s" \
+      --extractor-args 'youtube:skip=hls;max_comments=50,50,0,0;comment_sort=top' \
+      -O '0 0' -O "%(.{$fields,comments})j" -- "$url" >"$found"
+  fi
+  tail -n +2 "$found"
+  rm -f "$found"
 }
 
 run() {
@@ -105,5 +117,5 @@ case ${1:-} in
       if (( code )); then report "Capture failed: $title. $(tail -n 1 "$log")"
       else rm -f "$job" "$log"; report "Captured $artist – $title"; fi' EXIT
     run ;;
-  *) print -u2 "usage: capture.zsh probe <url> [cookies] | run <job.json> | retag <file.m4a> <comment> <tracklist> <url>"; exit 2 ;;
+  *) print -u2 "usage: capture.zsh probe <url> [cookies] [mix-seconds] | run <job.json> | retag <file.m4a> <comment> <tracklist> <url>"; exit 2 ;;
 esac
