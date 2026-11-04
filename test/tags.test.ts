@@ -11,6 +11,7 @@ import {
   timestamp,
   videoIdOf,
   VideoInfo,
+  videoInfoOf,
 } from "../src/tags";
 
 const base: VideoInfo = {
@@ -75,6 +76,32 @@ test("tracklist comes from the uploader's chapters, and is blank without them", 
     "0:00 Andy Leech - Vanadis\n3:17 Sublab - anything for you\n58:00 Fabbro - Pandemic\n1:00:00 Lera - Корабли (Antent Edit)",
   );
   assert.equal(suggestTags(base, "{year} Mixes").tracklist, "");
+});
+
+test("without chapters, the uploader's own timestamped comment becomes the chapters", () => {
+  const comments = [
+    { text: "best part at 12:34 and 20:00", author_is_uploader: false, is_pinned: true },
+    { text: "Thanks for listening!", author_is_uploader: true },
+    {
+      text: "TRACKLIST\n\n00:00 Alpstone Drown - Memory\n04:30 Diversity of Silence - Nostalgia\n1:02:05 MARION - Sirens Call",
+      author_is_uploader: true,
+    },
+  ];
+  const info = videoInfoOf({ id: "x", comments }, "");
+  assert.deepEqual(info.chapters, [
+    { startSeconds: 0, title: "Alpstone Drown - Memory" },
+    { startSeconds: 270, title: "Diversity of Silence - Nostalgia" },
+    { startSeconds: 3725, title: "MARION - Sirens Call" },
+  ]);
+  assert.equal(suggestTags(info, "{year} Mixes").tracklist.split("\n")[1], "4:30 Diversity of Silence - Nostalgia");
+});
+
+test("real chapters win, and fan comments or a single timestamp never make a tracklist", () => {
+  const chapters = [{ start_time: 0, title: "Real" }];
+  const uploader = { text: "0:00 A - B\n3:00 C - D", author_is_uploader: true };
+  assert.deepEqual(videoInfoOf({ id: "x", chapters, comments: [uploader] }, "").chapters, [{ startSeconds: 0, title: "Real" }]);
+  assert.deepEqual(videoInfoOf({ id: "x", comments: [{ ...uploader, author_is_uploader: false }] }, "").chapters, []);
+  assert.deepEqual(videoInfoOf({ id: "x", comments: [{ text: "drop at 3:00 A", author_is_uploader: true }] }, "").chapters, []);
 });
 
 test("timestamps drop the hour until a mix passes one", () => {

@@ -36,10 +36,29 @@ export type ProbeJson = {
   description?: string;
   duration?: number;
   chapters?: { start_time: number; title: string }[];
+  comments?: { text: string; author_is_uploader?: boolean }[];
   artist?: string;
   track?: string;
   album?: string;
 };
+
+const TIMESTAMP_LINE = /^(?:(\d+):)?(\d{1,2}):(\d{2})\s+(\S.*)$/;
+
+function chaptersFromText(text: string): Chapter[] {
+  return text.split("\n").flatMap((line) => {
+    const m = line.trim().match(TIMESTAMP_LINE);
+    return m ? [{ startSeconds: Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3]), title: m[4].trim() }] : [];
+  });
+}
+
+function uploaderChapters(comments: ProbeJson["comments"] = []): Chapter[] {
+  for (const comment of comments) {
+    if (!comment.author_is_uploader) continue;
+    const chapters = chaptersFromText(comment.text);
+    if (chapters.length >= 2) return chapters;
+  }
+  return [];
+}
 
 export function videoInfoOf(json: ProbeJson, url: string): VideoInfo {
   return {
@@ -51,7 +70,9 @@ export function videoInfoOf(json: ProbeJson, url: string): VideoInfo {
     webpageUrl: json.webpage_url ?? url,
     description: json.description ?? "",
     durationSeconds: json.duration ?? 0,
-    chapters: (json.chapters ?? []).map((chapter) => ({ startSeconds: chapter.start_time, title: chapter.title })),
+    chapters: json.chapters?.length
+      ? json.chapters.map((chapter) => ({ startSeconds: chapter.start_time, title: chapter.title }))
+      : uploaderChapters(json.comments),
     artist: json.artist ?? undefined,
     track: json.track ?? undefined,
     album: json.album ?? undefined,
